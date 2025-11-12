@@ -2,6 +2,7 @@
 
 import sys
 from coding_agent.agent import CodingAgent
+from coding_agent.dashboard import Dashboard
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.text import Text
@@ -51,11 +52,24 @@ def display_mcp_servers(agent):
         console.print(f"    Capabilities: {', '.join(server.capabilities)}")
     console.print("\n[bold]MCP servers provide additional tools like code execution and file access without external APIs.[/bold]\n")
 
+def display_dashboard():
+    """Display the real-time dashboard for code quality metrics"""
+    dashboard = Dashboard()
+    rich_table = dashboard.generate_rich_dashboard()
+    console.print(rich_table)
+    
+    # Additional explanation
+    console.print("\n[bold]Dashboard Legend:[/bold]")
+    console.print("  ✅ Good - Metric is in healthy range")
+    console.print("  ⚠️  Warning - Metric could be improved")
+    console.print("  ❌ Poor - Metric needs attention\n")
+
 def display_help():
     """Display help information with all available commands"""
     console.print("\n[bold blue]Available Commands:[/bold blue]")
     console.print("  [cyan]/models[/cyan] - List all available AI models")
     console.print("  [cyan]/mcp[/cyan] - List available MCP servers")
+    console.print("  [cyan]/dashboard[/cyan] - Show real-time code quality dashboard")
     console.print("  [cyan]/switch [model_key][/cyan] - Switch to a specific model")
     console.print("  [cyan]/help[/cyan] - Show this help message")
     console.print("  [cyan]/clear[/cyan] - Clear the conversation history")
@@ -63,7 +77,12 @@ def display_help():
     console.print("[bold blue]MCP Servers Available:[/bold blue]")
     console.print("  [cyan]code-runner[/cyan] - Execute Python code in sandboxed environment")
     console.print("  [cyan]filesystem[/cyan] - Access and manage files in workspace")
-    console.print("  [cyan]duckduckgo[/cyan] - Perform web searches\n")
+    console.print("  [cyan]duckduckgo[/cyan] - Perform web searches")
+    console.print("  [cyan]code-search[/cyan] - Search for functions, classes, and TODOs in code")
+    console.print("  [cyan]shell[/cyan] - Execute safe shell commands")
+    console.print("  [cyan]testing[/cyan] - Run automated tests")
+    console.print("  [cyan]doc-search[/cyan] - Search documentation files")
+    console.print("  [cyan]database[/cyan] - Query local SQLite databases\n")
 
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
@@ -83,9 +102,10 @@ def display_welcome_screen():
     
     welcome_table.add_row("📝 File Operations", "Read and write source files in the workspace")
     welcome_table.add_row("📦 Git Operations", "Perform git operations (stage, commit)")
-    welcome_table.add_row("🌐 Web Search", "Perform real-time web searches via a search API")
+    welcome_table.add_row("🌐 Web Search", "Perform real-time web searches via DuckDuckGo (no API key needed)")
     welcome_table.add_row("🤖 AI Integration", "Powered by multiple LLM providers (Groq, Google)")
-    welcome_table.add_row("🛠️ MCP Servers", "Access additional tools via MCP protocol (code execution, file system access)")
+    welcome_table.add_row("🛠️ MCP Servers", "Access additional tools via MCP protocol (code search, shell, testing, docs, databases)")
+    welcome_table.add_row("📊 Dashboard", "Real-time code quality, test coverage, and build metrics")
     
     console.print(welcome_table)
     
@@ -175,12 +195,12 @@ class CustomCompleter(Completer):
                         yield Completion(key, 
                                        display=f"{key} [{info['name']}]",
                                        display_meta=f"{info['provider']}{suffix}")
-            elif command in ['/help', '/clear', '/mcp', '/models', '/exit']:
+            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/exit']:
                 # Don't provide additional completions if these commands are fully typed
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -228,6 +248,9 @@ def main():
                 elif prompt.lower() == '/mcp':
                     display_mcp_servers(agent)
                     continue
+                elif prompt.lower() == '/dashboard':
+                    display_dashboard()
+                    continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
                     if len(parts) > 1:
@@ -254,7 +277,7 @@ def main():
                     break
                 else:
                     console.print(f"[bold red]Unknown command: {prompt}[/bold red]")
-                    console.print("[bold yellow]Available commands: /models, /mcp, /switch [model_key], /help, /clear, /exit, /quit, /bye[/bold yellow]")
+                    console.print("[bold yellow]Available commands: /models, /mcp, /dashboard, /switch [model_key], /help, /clear, /exit[/bold yellow]")
                     continue
 
             if prompt.lower() == "exit":

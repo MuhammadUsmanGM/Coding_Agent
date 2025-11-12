@@ -47,6 +47,36 @@ class MCPServerManager:
                 description="Server to perform web searches using DuckDuckGo",
                 endpoint="http://localhost:9200",
                 capabilities=["web-search", "search"]
+            ),
+            MCPServerConfig(
+                name="code-search",
+                description="Server to search code for functions, classes, and TODOs",
+                endpoint="http://localhost:9300",
+                capabilities=["code-search", "function", "class", "todo"]
+            ),
+            MCPServerConfig(
+                name="shell",
+                description="Server to execute safe shell commands",
+                endpoint="http://localhost:9400",
+                capabilities=["shell", "command-execution"]
+            ),
+            MCPServerConfig(
+                name="testing",
+                description="Server to run automated tests",
+                endpoint="http://localhost:9500",
+                capabilities=["testing", "pytest", "unittest"]
+            ),
+            MCPServerConfig(
+                name="doc-search",
+                description="Server to search documentation files",
+                endpoint="http://localhost:9600",
+                capabilities=["doc-search", "md-search", "documentation"]
+            ),
+            MCPServerConfig(
+                name="database",
+                description="Server to query local SQLite databases",
+                endpoint="http://localhost:9700",
+                capabilities=["sql", "sqlite", "database"]
             )
         ]
         
