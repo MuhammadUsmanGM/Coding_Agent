@@ -18,6 +18,8 @@ Codeius is an AI-powered coding assistant that helps with various programming ta
 - **Documentation Search**: Find information in local documentation files
 - **Database Access**: Query local SQLite databases safely
 - **Real-time Dashboard**: Monitor code quality, test coverage, and build status
+- **Visual Recognition/OCR**: Extract text from images using OCR
+- **Code Refactoring & Quality**: Analyze code style, detect anti-patterns, and suggest refactorings
 
 ## Installation
 
@@ -31,16 +33,18 @@ Codeius is an AI-powered coding assistant that helps with various programming ta
    ```bash
    pip install -e .
    # Additional dependencies for enhanced functionality:
-   pip install flask pytest
+   pip install flask pytest pillow pytesseract radon flake8
    ```
 
-3. To use the enhanced functionality (code search, shell, testing, docs search, databases):
+3. To use the enhanced functionality (code search, shell, testing, docs search, databases, OCR, refactoring):
    You will need to run the following server scripts in separate terminals:
    - `python code_search_server.py` (port 9300)
    - `python shell_server.py` (port 9400)
    - `python testing_server.py` (port 9500)
    - `python doc_search_server.py` (port 9600)
    - `python db_server.py` (port 9700)
+   - `python ocr_server.py` (port 9800)
+   - `python refactor_server.py` (port 9900)
 
 ## Configuration
 

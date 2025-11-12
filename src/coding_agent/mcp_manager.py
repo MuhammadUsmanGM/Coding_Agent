@@ -77,6 +77,18 @@ class MCPServerManager:
                 description="Server to query local SQLite databases",
                 endpoint="http://localhost:9700",
                 capabilities=["sql", "sqlite", "database"]
+            ),
+            MCPServerConfig(
+                name="ocr",
+                description="Server to perform OCR on images",
+                endpoint="http://localhost:9800",
+                capabilities=["ocr", "image-processing", "text-extraction"]
+            ),
+            MCPServerConfig(
+                name="refactor",
+                description="Server to analyze and refactor code",
+                endpoint="http://localhost:9900",
+                capabilities=["refactoring", "code-quality", "analysis"]
             )
         ]
         

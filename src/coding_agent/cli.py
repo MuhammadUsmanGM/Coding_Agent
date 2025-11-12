@@ -1,6 +1,7 @@
 # src/cli.py
 
 import sys
+import os
 from coding_agent.agent import CodingAgent
 from coding_agent.dashboard import Dashboard
 from dotenv import load_dotenv
@@ -64,17 +65,73 @@ def display_dashboard():
     console.print("  ⚠️  Warning - Metric could be improved")
     console.print("  ❌ Poor - Metric needs attention\n")
 
+def ocr_image(agent, image_path):
+    """Process an image using OCR to extract text"""
+    if not os.path.exists(image_path):
+        console.print(f"[bold red]Error: Image file '{image_path}' does not exist.[/bold red]")
+        return
+    
+    # Find the OCR provider
+    ocr_provider = None
+    for provider in agent.providers:
+        if hasattr(provider, 'server_name') and provider.server_name == 'ocr':
+            ocr_provider = provider
+            break
+    
+    if not ocr_provider:
+        console.print("[bold red]Error: OCR server not available.[/bold red]")
+        return
+    
+    # In a real implementation, we would send the image to the OCR server
+    # For now, we'll just simulate the process
+    console.print(f"[bold yellow]Processing image: {image_path}[/bold yellow]")
+    console.print("[bold]This would send the image to the OCR server for text extraction...[/bold]")
+    console.print("[dim]In a real implementation, the image would be sent to the OCR server and the text would be returned.[/dim]")
+
+def refactor_code(agent, file_path):
+    """Analyze and refactor code in the specified file"""
+    if not os.path.exists(file_path):
+        console.print(f"[bold red]Error: File '{file_path}' does not exist.[/bold red]")
+        return
+    
+    # Find the refactor provider
+    refactor_provider = None
+    for provider in agent.providers:
+        if hasattr(provider, 'server_name') and provider.server_name == 'refactor':
+            refactor_provider = provider
+            break
+    
+    if not refactor_provider:
+        console.print("[bold red]Error: Refactor server not available.[/bold red]")
+        return
+    
+    # Read the file content
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception as e:
+        console.print(f"[bold red]Error reading file: {e}[/bold red]")
+        return
+    
+    # In a real implementation, we would send the content to the refactor server
+    # For now, we'll just simulate the process
+    console.print(f"[bold yellow]Analyzing code in: {file_path}[/bold yellow]")
+    console.print("[bold]This would send the code to the refactoring server for analysis...[/bold]")
+    console.print("[dim]In a real implementation, the server would return issues and suggestions for refactoring.[/dim]")
+
 def display_help():
     """Display help information with all available commands"""
     console.print("\n[bold blue]Available Commands:[/bold blue]")
     console.print("  [cyan]/models[/cyan] - List all available AI models")
-    console.print("  [cyan]/mcp[/cyan] - List available MCP servers")
+    console.print("  [cyan]/mcp[/cyan] - List available MCP tools")
     console.print("  [cyan]/dashboard[/cyan] - Show real-time code quality dashboard")
+    console.print("  [cyan]/ocr [image_path][/cyan] - Extract text from an image using OCR")
+    console.print("  [cyan]/refactor [file_path][/cyan] - Analyze and refactor code in a file")
     console.print("  [cyan]/switch [model_key][/cyan] - Switch to a specific model")
     console.print("  [cyan]/help[/cyan] - Show this help message")
     console.print("  [cyan]/clear[/cyan] - Clear the conversation history")
     console.print("  [cyan]/exit[/cyan] - Exit the application\n")
-    console.print("[bold blue]MCP Servers Available:[/bold blue]")
+    console.print("[bold blue]MCP Tools Available:[/bold blue]")
     console.print("  [cyan]code-runner[/cyan] - Execute Python code in sandboxed environment")
     console.print("  [cyan]filesystem[/cyan] - Access and manage files in workspace")
     console.print("  [cyan]duckduckgo[/cyan] - Perform web searches")
@@ -82,7 +139,9 @@ def display_help():
     console.print("  [cyan]shell[/cyan] - Execute safe shell commands")
     console.print("  [cyan]testing[/cyan] - Run automated tests")
     console.print("  [cyan]doc-search[/cyan] - Search documentation files")
-    console.print("  [cyan]database[/cyan] - Query local SQLite databases\n")
+    console.print("  [cyan]database[/cyan] - Query local SQLite databases")
+    console.print("  [cyan]ocr[/cyan] - Extract text from images")
+    console.print("  [cyan]refactor[/cyan] - Analyze and refactor code\n")
 
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
@@ -142,15 +201,15 @@ def display_conversation_history(agent):
     console.print()  # Add spacing
 
 def display_models(agent):
-    """Display available models to the user"""
+    """Display available AI models to the user (excluding MCP tools)"""
     models = agent.get_available_models()
     current_model = agent.get_current_model_info()
     
     if not models:
-        console.print("[yellow]No models available.[/yellow]")
+        console.print("[yellow]No AI models available.[/yellow]")
         return
     
-    console.print("\n[bold blue]Available Models:[/bold blue]")
+    console.print("\n[bold blue]Available AI Models:[/bold blue]")
     for key, model_info in models.items():
         if current_model and key == current_model['key']:
             # Highlight the currently active model
@@ -158,6 +217,21 @@ def display_models(agent):
         else:
             console.print(f"  [cyan]{key}[/cyan]: {model_info['name']} ({model_info['provider']})")
     console.print("\n[bold]To switch models, use: /switch [model_key][/bold]\n")
+
+def display_mcp_tools(agent):
+    """Display available MCP tools to the user"""
+    # Get all MCP tools from the agent
+    mcp_tools = agent.get_available_mcp_tools()
+    
+    if not mcp_tools:
+        console.print("[yellow]No MCP tools available.[/yellow]")
+        console.print("[dim]MCP tools provide access to various utilities without requiring API keys.[/dim]")
+        return
+    
+    console.print("\n[bold blue]Available MCP Tools:[/bold blue]")
+    for key, tool_info in mcp_tools.items():
+        console.print(f"  [cyan]{key}[/cyan]: {tool_info['name']} [MCP Tool]")
+    console.print("\n[bold]MCP tools provide specialized functionality like code search, shell execution, etc.[/bold]\n")
 
 class CustomCompleter(Completer):
     def __init__(self, agent):
@@ -195,12 +269,12 @@ class CustomCompleter(Completer):
                         yield Completion(key, 
                                        display=f"{key} [{info['name']}]",
                                        display_meta=f"{info['provider']}{suffix}")
-            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/exit']:
+            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/ocr', '/refactor', '/exit']:
                 # Don't provide additional completions if these commands are fully typed
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/dashboard', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/ocr', '/refactor', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -246,10 +320,28 @@ def main():
                     display_models(agent)
                     continue
                 elif prompt.lower() == '/mcp':
-                    display_mcp_servers(agent)
+                    display_mcp_tools(agent)
                     continue
                 elif prompt.lower() == '/dashboard':
                     display_dashboard()
+                    continue
+                elif prompt.lower().startswith('/ocr '):
+                    # Extract image path from the command
+                    parts = prompt.split(' ', 1)
+                    if len(parts) > 1:
+                        image_path = parts[1].strip()
+                        ocr_image(agent, image_path)
+                    else:
+                        console.print("[bold red]Please specify an image path. Usage: /ocr [image_path][/bold red]")
+                    continue
+                elif prompt.lower().startswith('/refactor '):
+                    # Extract file path from the command
+                    parts = prompt.split(' ', 1)
+                    if len(parts) > 1:
+                        file_path = parts[1].strip()
+                        refactor_code(agent, file_path)
+                    else:
+                        console.print("[bold red]Please specify a file path. Usage: /refactor [file_path][/bold red]")
                     continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)

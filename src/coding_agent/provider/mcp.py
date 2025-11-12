@@ -44,6 +44,10 @@ class MCPProvider(ProviderBase):
                 return self._doc_search_server(messages)
             elif self.server_name == "database":
                 return self._database_server(messages)
+            elif self.server_name == "ocr":
+                return self._ocr_server(messages)
+            elif self.server_name == "refactor":
+                return self._refactor_server(messages)
             else:
                 return self._default_server_interaction(messages)
         except Exception as e:
@@ -257,7 +261,7 @@ class MCPProvider(ProviderBase):
         if any(word in last_message.lower() for word in ["select", "from", "where", "sql", "database", "query", "table"]):
             # For now, we'll simulate a simple query based on the message
             # In a real implementation, we'd need more sophisticated parsing
-            sql_query = last_message[-500:]  # Take the last 500 chars as potential query
+            sql_query = last_message[-500:]  # Take the last last 500 chars as potential query
             sql_query = sql_query.strip()
             if not sql_query.lower().startswith("select "):
                 # If not explicitly a SELECT, we won't execute it for safety
@@ -290,6 +294,32 @@ class MCPProvider(ProviderBase):
                 return f"Error executing database query: {str(e)}"
         else:
             return f"Database server received: {last_message[:100]}... (waiting for SQL query)"
+    
+    def _ocr_server(self, messages):
+        """Handle OCR requests for reading text from images"""
+        last_message = messages[-1]["content"] if messages else ""
+        
+        # Look for keywords that suggest an OCR request
+        if any(word in last_message.lower() for word in ["ocr", "image", "screenshot", "png", "jpg", "jpeg", "read from", "extract text"]):
+            # This is a simplified implementation. In a real implementation, the agent would need
+            # to send image data to the OCR server, but for now we'll just return a message
+            # indicating what would happen.
+            return f"OCR server would process image from: {last_message[:100]}..."
+        else:
+            return f"OCR server received: {last_message[:100]}... (waiting for image data)"
+    
+    def _refactor_server(self, messages):
+        """Handle refactoring requests for code analysis"""
+        last_message = messages[-1]["content"] if messages else ""
+        
+        # Look for keywords that suggest a refactoring request
+        if any(word in last_message.lower() for word in ["refactor", "refactoring", "quality", "lint", "analyze", "code review"]):
+            # This is a simplified implementation. In a real implementation, the agent would need
+            # to send code content to the refactoring server, but for now we'll just return a message
+            # indicating what would happen.
+            return f"Refactor server would analyze: {last_message[:100]}..."
+        else:
+            return f"Refactor server received: {last_message[:100]}... (waiting for code to analyze)"
     
     def _default_server_interaction(self, messages):
         """Default interaction for other server types"""

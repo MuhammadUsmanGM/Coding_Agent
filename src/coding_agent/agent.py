@@ -56,24 +56,14 @@ class CodingAgent:
         return None
 
     def get_available_models(self) -> Dict[str, Any]:
-        """Get list of available models from all providers"""
+        """Get list of available AI models only (excluding MCP tools)"""
         models: Dict[str, Any] = {}
         for i, provider in enumerate(self.providers):
             # Extract model information from each provider
             provider_type = type(provider)
             
-            if provider_type.__name__ == 'MCPProvider':
-                # Handle MCP provider specifically
-                server_name = getattr(provider, 'server_name', 'mcp_server')
-                provider_name = 'mcp'
-                models[f"mcp_{i}"] = {
-                    'name': server_name,
-                    'provider': provider_name,
-                    'instance': provider,
-                    'type': 'mcp'
-                }
-            else:
-                # Handle cloud providers
+            if provider_type.__name__ != 'MCPProvider':
+                # Only include non-MCP providers (actual AI models)
                 model_name = getattr(provider, 'model', 'unknown')
                 provider_name = provider_type.__name__.replace('Provider', '')
                 provider_type_str = 'cloud' if provider_name in ['Groq', 'Google'] else 'other'
@@ -84,6 +74,24 @@ class CodingAgent:
                     'type': provider_type_str
                 }
         return models
+    
+    def get_available_mcp_tools(self) -> Dict[str, Any]:
+        """Get list of available MCP tools/servers"""
+        tools: Dict[str, Any] = {}
+        for i, provider in enumerate(self.providers):
+            provider_type = type(provider)
+            
+            if provider_type.__name__ == 'MCPProvider':
+                # Handle MCP provider specifically
+                server_name = getattr(provider, 'server_name', 'mcp_server')
+                provider_name = 'mcp'
+                tools[f"mcp_{i}"] = {
+                    'name': server_name,
+                    'provider': provider_name,
+                    'instance': provider,
+                    'type': 'mcp'
+                }
+        return tools
 
     def switch_model(self, model_key: str) -> str:
         """Switch to a specific model by key"""
