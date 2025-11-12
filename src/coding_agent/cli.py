@@ -25,20 +25,17 @@ def confirm_safe_execution(result):
         return ask == "y"
 
 def main():
-    # Display ASCII art title
-    ascii_art = pyfiglet.figlet_format("CODEIUS", font="slant")
-    console.print(f"[bold blue]{ascii_art}[/bold blue]")
+    # Display beautiful ASCII art for CODEIUS
+    ascii_art = pyfiglet.figlet_format("CODEIUS", font="standard")
+    console.print(f"[bold magenta]{ascii_art}[/bold magenta]")
     console.print(Panel("[bold green]AI Coding Agent[/bold green] - Type your instructions ('exit' to quit)", expand=False))
     
     agent = CodingAgent()
 
     while True:
         try:
-            # Use regular input as fallback, but try rich prompt first
-            try:
-                prompt = input("\n[bold cyan]You[/bold cyan] ").strip()
-            except:
-                prompt = Prompt.ask("\n[bold cyan]You[/bold cyan]").strip()
+            # Use prompt-toolkit for a more advanced input box experience
+            prompt = Prompt.ask("\n[bold cyan]You[/bold cyan]", default="").strip()
             
             if not prompt: continue
             if prompt.lower() in ("exit", "quit", "bye"):
