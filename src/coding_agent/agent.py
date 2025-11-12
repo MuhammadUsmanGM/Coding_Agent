@@ -1,25 +1,39 @@
 # src/agent.py
 
 import json
+from typing import Dict, Any, List, Optional, Tuple
 from coding_agent.provider.multiprovider import MultiProvider
 from coding_agent.provider.groq import GroqProvider
 from coding_agent.provider.google import GoogleProvider
+from coding_agent.provider.mcp import MCPProvider
 from coding_agent.provider.tavily import TavilyWebSearch
 from coding_agent.file_ops import FileOps
 from coding_agent.git_ops import GitOps
+from coding_agent.mcp_manager import mcp_manager
 from dotenv import load_dotenv
 load_dotenv()
 
 class CodingAgent:
-    def __init__(self):
+    def __init__(self) -> None:
+        # Initialize MCP server manager
+        self.mcp_manager = mcp_manager
+        
+        # Initialize providers including cloud providers and MCP servers
         self.providers = [GroqProvider(), GoogleProvider()]
+        
+        # Add MCP server providers
+        mcp_servers = self.mcp_manager.list_servers()
+        for server in mcp_servers:
+            if server.enabled:
+                self.providers.append(MCPProvider(server.name))
+        
         self.llm = MultiProvider(self.providers)
         self.file_ops = FileOps()
         self.git_ops = GitOps()
         self.web_search = TavilyWebSearch()
-        self.history = []
-        
-    def get_current_model_info(self):
+        self.history: List[Dict[str, str]] = []
+
+    def get_current_model_info(self) -> Optional[Dict[str, Any]]:
         """Get information about the currently active provider/model"""
         if hasattr(self.llm, 'current') and hasattr(self.llm, 'providers'):
             current_idx = self.llm.current
@@ -34,22 +48,38 @@ class CodingAgent:
                     'key': f"{provider_name.lower()}_{current_idx}"
                 }
         return None
-        
-    def get_available_models(self):
+
+    def get_available_models(self) -> Dict[str, Any]:
         """Get list of available models from all providers"""
-        models = {}
+        models: Dict[str, Any] = {}
         for i, provider in enumerate(self.providers):
             # Extract model information from each provider
-            model_name = getattr(provider, 'model', 'unknown')
-            provider_name = type(provider).__name__.replace('Provider', '')
-            models[f"{provider_name.lower()}_{i}"] = {
-                'name': model_name,
-                'provider': provider_name,
-                'instance': provider
-            }
+            provider_type = type(provider)
+            
+            if provider_type.__name__ == 'MCPProvider':
+                # Handle MCP provider specifically
+                server_name = getattr(provider, 'server_name', 'mcp_server')
+                provider_name = 'mcp'
+                models[f"mcp_{i}"] = {
+                    'name': server_name,
+                    'provider': provider_name,
+                    'instance': provider,
+                    'type': 'mcp'
+                }
+            else:
+                # Handle cloud providers
+                model_name = getattr(provider, 'model', 'unknown')
+                provider_name = provider_type.__name__.replace('Provider', '')
+                provider_type_str = 'cloud' if provider_name in ['Groq', 'Google'] else 'other'
+                models[f"{provider_name.lower()}_{i}"] = {
+                    'name': model_name,
+                    'provider': provider_name,
+                    'instance': provider,
+                    'type': provider_type_str
+                }
         return models
-        
-    def switch_model(self, model_key):
+
+    def switch_model(self, model_key: str) -> str:
         """Switch to a specific model by key"""
         models = self.get_available_models()
         if model_key in models:
@@ -63,9 +93,22 @@ class CodingAgent:
                     return f"Switched to {models[model_key]['name']} ({models[model_key]['provider']})"
         return f"Model {model_key} not found. Use /models to see available models."
 
-    def system_prompt(self):
+    def system_prompt(self) -> str:
+        # Read additional agent instructions from AGENT.md
+        agent_instructions = ""
+        try:
+            import os
+            agent_md_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "AGENT.md")
+            if os.path.exists(agent_md_path):
+                with open(agent_md_path, 'r', encoding='utf-8') as f:
+                    agent_instructions = f.read()
+        except Exception:
+            # If reading the file fails, continue with just the base instructions
+            agent_instructions = ""
+        
         return (
-            "You are an advanced AI coding agent with the following tools:\n"
+            f"{agent_instructions}\n\n"
+            "Core Tools Available:\n"
             "- Read and write source files in the workspace\n"
             "- Perform git operations (stage, commit)\n"
             "- Perform real-time web searches via a search API\n"
@@ -82,7 +125,7 @@ class CodingAgent:
             "If only a conversation or non-code answer is needed, reply conversationally."
         )
 
-    def ask(self, prompt, max_tokens=2048):
+    def ask(self, prompt: str, max_tokens: int = 2048) -> str:
         # Compose dialogue for LLM
         messages = [{"role": "system", "content": self.system_prompt()}]
         messages += self.history + [{"role": "user", "content": prompt}]
@@ -94,11 +137,16 @@ class CodingAgent:
         self.history.append({"role": "assistant", "content": result if performed else reply})
         return result if performed else reply
 
-    def _try_parse_and_execute(self, reply):
+    def _try_parse_and_execute(self, reply: str) -> Tuple[str, bool]:
         try:
             # Extract JSON from LLM reply (even in markdown code blocks)
             start = reply.find("{")
+            if start == -1:  # No JSON found
+                return reply, False
             end = reply.rfind("}") + 1
+            if end == 0:  # No closing brace found
+                return reply, False
+                
             json_str = reply[start:end]
             out = json.loads(json_str)
             actions = out.get("actions", [])
@@ -106,10 +154,13 @@ class CodingAgent:
             for action in actions:
                 if action["type"] == "read_file":
                     content = self.file_ops.read_file(action["path"])
-                    results.append(f"🔹 Read `{action['path']}`:\n``````")
+                    results.append(f"🔹 Read `{action['path']}`:\n{content}")
                 elif action["type"] == "write_file":
                     res = self.file_ops.write_file(action["path"], action["content"])
-                    results.append(f"✅ Wrote `{action['path']}`.")
+                    if res is True:
+                        results.append(f"✅ Wrote `{action['path']}`.")
+                    else:
+                        results.append(f"❌ Error writing `{action['path']}`: {res}")
                 elif action["type"] == "git_commit":
                     self.git_ops.stage_files(".")
                     cm = self.git_ops.commit(action["message"])
@@ -118,8 +169,10 @@ class CodingAgent:
                     answer = self.web_search.search(action["query"])
                     results.append(f"🌐 Web search for '{action['query']}':\n{answer}\n")
             return "\n".join(results), True
-        except Exception:
+        except json.JSONDecodeError:
             return reply, False
+        except Exception as e:
+            return f"Error processing action: {str(e)}", False
 
-    def reset_history(self):
+    def reset_history(self) -> None:
         self.history = []

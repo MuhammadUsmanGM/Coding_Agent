@@ -32,6 +32,35 @@ def confirm_safe_execution(result):
         ask = input("Proceed? [y/N]: ").strip().lower()
         return ask == "y"
 
+def display_mcp_servers(agent):
+    """Display available MCP servers to the user"""
+    # Get the MCP manager instance from the agent
+    mcp_manager = agent.mcp_manager
+    servers = mcp_manager.list_servers()
+    
+    if not servers:
+        console.print("[yellow]No MCP servers available.[/yellow]")
+        console.print("[dim]MCP servers provide access to various model providers.[/dim]")
+        return
+    
+    console.print("\n[bold blue]Available MCP Servers:[/bold blue]")
+    for server in servers:
+        status = "[green]ENABLED[/green]" if server.enabled else "[red]DISABLED[/red]"
+        console.print(f"  [cyan]{server.name}[/cyan]: {server.description} - {status}")
+        console.print(f"    Endpoint: {server.endpoint}")
+        console.print(f"    Capabilities: {', '.join(server.capabilities)}")
+    console.print("\n[bold]MCP servers provide access to local and remote models without API keys.[/bold]\n")
+
+def display_help():
+    """Display help information with all available commands"""
+    console.print("\n[bold blue]Available Commands:[/bold blue]")
+    console.print("  [cyan]/models[/cyan] - List all available AI models")
+    console.print("  [cyan]/mcp[/cyan] - List available MCP servers")
+    console.print("  [cyan]/switch [model_key][/cyan] - Switch to a specific model")
+    console.print("  [cyan]/help[/cyan] - Show this help message")
+    console.print("  [cyan]/clear[/cyan] - Clear the conversation history")
+    console.print("  [cyan]/exit[/cyan] - Exit the application\n")
+
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
     # Display beautiful ASCII art for CODEIUS with improved font
@@ -51,7 +80,7 @@ def display_welcome_screen():
     welcome_table.add_row("📝 File Operations", "Read and write source files in the workspace")
     welcome_table.add_row("📦 Git Operations", "Perform git operations (stage, commit)")
     welcome_table.add_row("🌐 Web Search", "Perform real-time web searches via a search API")
-    welcome_table.add_row("🤖 AI Integration", "Powered by multiple LLM providers (Groq, Google)")
+    welcome_table.add_row("🤖 AI Integration", "Powered by multiple LLM providers (Groq, Google, Local)")
     
     console.print(welcome_table)
     
@@ -141,16 +170,15 @@ class CustomCompleter(Completer):
                         yield Completion(key, 
                                        display=f"{key} [{info['name']}]",
                                        display_meta=f"{info['provider']}{suffix}")
-            elif command in ['/models', '/switch', '/exit', '/quit', '/bye']:
-                # Don't provide additional completions if the command is fully typed
+            elif command in ['/help', '/clear', '/mcp', '/models', '/exit']:
+                # Don't provide additional completions if these commands are fully typed
                 pass
             else:
-                # Provide command suggestions
-                commands = ['/models', '/switch', '/exit', '/quit', '/bye']
+                # Provide command suggestions for commands that don't require parameters
+                commands = ['/models', '/mcp', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
-
 
 def main():
     display_welcome_screen()
@@ -192,6 +220,9 @@ def main():
                 if prompt.lower() == '/models':
                     display_models(agent)
                     continue
+                elif prompt.lower() == '/mcp':
+                    display_mcp_servers(agent)
+                    continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
                     if len(parts) > 1:
@@ -202,15 +233,26 @@ def main():
                     else:
                         console.print("[bold red]Please specify a model. Use /models to see available models.[/bold red]")
                         continue
-                elif prompt.lower() in ("exit", "quit", "bye"):
-                    # This handles the case when user types /exit, /quit, or /bye
-                    pass
+                elif prompt.lower() == '/help':
+                    display_help()
+                    continue
+                elif prompt.lower() == '/clear':
+                    agent.reset_history()
+                    console.print("[bold green]✅ Conversation history cleared.[/bold green]")
+                    continue
+                elif prompt.lower() == '/exit':
+                    # Allow user to exit using /exit command
+                    # Display conversation history before exiting
+                    console.print(Panel("[bold yellow]Conversation Summary[/bold yellow]", expand=False))
+                    display_conversation_history(agent)
+                    console.print("\n[bold green]👋 Thank you for using Codeius! Goodbye![/bold green]")
+                    break
                 else:
                     console.print(f"[bold red]Unknown command: {prompt}[/bold red]")
-                    console.print("[bold yellow]Available commands: /models, /switch [model_key][/bold yellow]")
+                    console.print("[bold yellow]Available commands: /models, /mcp, /switch [model_key], /help, /clear, /exit, /quit, /bye[/bold yellow]")
                     continue
 
-            if prompt.lower() in ("exit", "quit", "bye"):
+            if prompt.lower() == "exit":
                 # Display conversation history before exiting
                 console.print(Panel("[bold yellow]Conversation Summary[/bold yellow]", expand=False))
                 display_conversation_history(agent)
