@@ -6,10 +6,10 @@ from coding_agent.provider.multiprovider import MultiProvider
 from coding_agent.provider.groq import GroqProvider
 from coding_agent.provider.google import GoogleProvider
 from coding_agent.provider.mcp import MCPProvider
-from coding_agent.provider.tavily import TavilyWebSearch
 from coding_agent.file_ops import FileOps
 from coding_agent.git_ops import GitOps
 from coding_agent.mcp_manager import mcp_manager
+from coding_agent.history_manager import HistoryManager
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -30,8 +30,14 @@ class CodingAgent:
         self.llm = MultiProvider(self.providers)
         self.file_ops = FileOps()
         self.git_ops = GitOps()
-        self.web_search = TavilyWebSearch()
         self.history: List[Dict[str, str]] = []
+        self.history_manager = HistoryManager()
+        
+        # Check if we have a search MCP provider available
+        self.search_provider = None
+        for provider in self.providers:
+            if hasattr(provider, 'server_name') and provider.server_name == 'duckduckgo':
+                self.search_provider = provider
 
     def get_current_model_info(self) -> Optional[Dict[str, Any]]:
         """Get information about the currently active provider/model"""
@@ -111,7 +117,7 @@ class CodingAgent:
             "Core Tools Available:\n"
             "- Read and write source files in the workspace\n"
             "- Perform git operations (stage, commit)\n"
-            "- Perform real-time web searches via a search API\n"
+            "- Perform web searches using DuckDuckGo via MCP server\n"
             "When you need to take action, reply with JSON using this structure:\n"
             "{\n"
             " \"explanation\": \"Describe your plan\",\n"
@@ -133,9 +139,14 @@ class CodingAgent:
         reply = self.llm.chat(messages, max_tokens)
         # Try to parse/action JSON; else conversational reply
         result, performed = self._try_parse_and_execute(reply)
+        response = result if performed else reply
         self.history.append({"role": "user", "content": prompt})
-        self.history.append({"role": "assistant", "content": result if performed else reply})
-        return result if performed else reply
+        self.history.append({"role": "assistant", "content": response})
+        
+        # Save the conversation to history
+        self.history_manager.save_conversation(prompt, response)
+        
+        return response
 
     def _try_parse_and_execute(self, reply: str) -> Tuple[str, bool]:
         try:
@@ -166,8 +177,16 @@ class CodingAgent:
                     cm = self.git_ops.commit(action["message"])
                     results.append(f"✅ Git commit: {action['message']}")
                 elif action["type"] == "web_search":
-                    answer = self.web_search.search(action["query"])
-                    results.append(f"🌐 Web search for '{action['query']}':\n{answer}\n")
+                    # Use the MCP-based search instead of Tavily
+                    if self.search_provider:
+                        # Create a message to send to the search provider
+                        search_messages = [
+                            {"role": "user", "content": f"Search for information about: {action['query']}"}
+                        ]
+                        answer = self.search_provider.chat(search_messages)
+                        results.append(f"🌐 DuckDuckGo search for '{action['query']}':\n{answer}\n")
+                    else:
+                        results.append(f"⚠️ No search provider available for query: {action['query']}")
             return "\n".join(results), True
         except json.JSONDecodeError:
             return reply, False

@@ -286,7 +286,12 @@ def main():
                 if show_history in ("y", "yes", ""):
                     display_conversation_history(agent)
         except KeyboardInterrupt:
-            console.print("\n[bold yellow]⚠️  Ctrl+C detected – use 'exit' to quit safely.[/bold yellow]")
+            console.print("\n[bold yellow]⚠️  Ctrl+C detected – exiting safely...[/bold yellow]")
+            # Display conversation history before exiting
+            console.print(Panel("[bold yellow]Conversation Summary[/bold yellow]", expand=False))
+            display_conversation_history(agent)
+            console.print("\n[bold green]👋 Thank you for using Codeius! Goodbye![/bold green]")
+            break
         except Exception as e:
             console.print(f"[bold red]❌ Error: {e}[/bold red]")
 
