@@ -12,6 +12,9 @@ from rich.box import HEAVY_HEAD
 from rich import print as rprint
 from rich.rule import Rule
 import pyfiglet
+from prompt_toolkit import PromptSession
+from prompt_toolkit.styles import Style
+from prompt_toolkit.formatted_text import HTML
 load_dotenv()
 
 console = Console()
@@ -87,10 +90,18 @@ def main():
 
     agent = CodingAgent()
 
+    # Create a prompt session with styling for a better input experience
+    style = Style.from_dict({
+        'prompt': 'bold cyan',
+    })
+    
+    session = PromptSession(style=style)
+
     while True:
         try:
-            # Enhanced user input prompt with better visual separation
-            prompt = Prompt.ask("[bold cyan]Enter your coding instruction[/bold cyan]", default="").strip()
+            # Styled prompt with more distinct visual indicator
+            prompt_text = HTML('<style fg="cyan" bg="black">⌨️ Enter your query: </style> ')
+            prompt = session.prompt(prompt_text, default='').strip()
 
             if not prompt: continue
             if prompt.lower() in ("exit", "quit", "bye"):
