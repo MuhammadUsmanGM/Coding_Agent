@@ -40,7 +40,7 @@ def display_mcp_servers(agent):
     
     if not servers:
         console.print("[yellow]No MCP servers available.[/yellow]")
-        console.print("[dim]MCP servers provide access to various model providers.[/dim]")
+        console.print("[dim]MCP servers provide access to various tools and services.[/dim]")
         return
     
     console.print("\n[bold blue]Available MCP Servers:[/bold blue]")
@@ -49,7 +49,7 @@ def display_mcp_servers(agent):
         console.print(f"  [cyan]{server.name}[/cyan]: {server.description} - {status}")
         console.print(f"    Endpoint: {server.endpoint}")
         console.print(f"    Capabilities: {', '.join(server.capabilities)}")
-    console.print("\n[bold]MCP servers provide access to local and remote models without API keys.[/bold]\n")
+    console.print("\n[bold]MCP servers provide additional tools like code execution and file access without external APIs.[/bold]\n")
 
 def display_help():
     """Display help information with all available commands"""
@@ -60,6 +60,10 @@ def display_help():
     console.print("  [cyan]/help[/cyan] - Show this help message")
     console.print("  [cyan]/clear[/cyan] - Clear the conversation history")
     console.print("  [cyan]/exit[/cyan] - Exit the application\n")
+    console.print("[bold blue]MCP Servers Available:[/bold blue]")
+    console.print("  [cyan]code-runner[/cyan] - Execute Python code in sandboxed environment")
+    console.print("  [cyan]filesystem[/cyan] - Access and manage files in workspace")
+    console.print("  [cyan]duckduckgo[/cyan] - Perform web searches\n")
 
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
@@ -80,7 +84,8 @@ def display_welcome_screen():
     welcome_table.add_row("📝 File Operations", "Read and write source files in the workspace")
     welcome_table.add_row("📦 Git Operations", "Perform git operations (stage, commit)")
     welcome_table.add_row("🌐 Web Search", "Perform real-time web searches via a search API")
-    welcome_table.add_row("🤖 AI Integration", "Powered by multiple LLM providers (Groq, Google, Local)")
+    welcome_table.add_row("🤖 AI Integration", "Powered by multiple LLM providers (Groq, Google)")
+    welcome_table.add_row("🛠️ MCP Servers", "Access additional tools via MCP protocol (code execution, file system access)")
     
     console.print(welcome_table)
     

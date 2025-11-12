@@ -20,40 +20,37 @@ class MCPServerConfig(BaseModel):
 
 
 class MCPServerManager:
-    """Manager for MCP servers that can provide access to various models"""
+    """Manager for MCP servers that can provide access to various tools and services"""
     
     def __init__(self):
         self.servers: Dict[str, MCPServerConfig] = {}
         self._initialize_default_servers()
     
     def _initialize_default_servers(self):
-        """Initialize default MCP servers (simulated for now)"""
-        # In a real implementation, this would discover actual running MCP servers
-        # For now, we'll add some example servers that might be available
-        
-        # Example server configurations (these would point to actual MCP endpoints)
-        example_servers = [
+        """Initialize default builtin MCP servers"""
+        # Built-in MCP servers for various capabilities
+        builtin_servers = [
             MCPServerConfig(
-                name="ollama-mcp",
-                description="Ollama MCP server for local models",
-                endpoint="http://localhost:11434/v1",  # Ollama's standard endpoint
-                capabilities=["text-generation", "code-completion"]
+                name="code-runner",
+                description="Server to run Python code in a sandboxed environment",
+                endpoint="http://localhost:9000",
+                capabilities=["code-execution", "python"]
             ),
             MCPServerConfig(
-                name="llamafile-mcp",
-                description="Llamafile MCP server",
-                endpoint="http://localhost:8080/v1",
-                capabilities=["text-generation", "code-completion"]
+                name="filesystem",
+                description="Server to access and manage files in the workspace",
+                endpoint="http://localhost:9100",
+                capabilities=["file-operations", "read-files", "list-files"]
             ),
             MCPServerConfig(
-                name="gpt4all-mcp",
-                description="GPT4All MCP server",
-                endpoint="http://localhost:4891/v1",
-                capabilities=["text-generation", "code-completion"]
+                name="duckduckgo",
+                description="Server to perform web searches using DuckDuckGo",
+                endpoint="http://localhost:9200",
+                capabilities=["web-search", "search"]
             )
         ]
         
-        for server in example_servers:
+        for server in builtin_servers:
             self.servers[server.name] = server
     
     def list_servers(self) -> List[MCPServerConfig]:
