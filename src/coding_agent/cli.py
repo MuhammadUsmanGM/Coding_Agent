@@ -631,7 +631,19 @@ def format_agent_response(response_text):
 
 def display_conversation_history(agent):
     """Display a summary of the conversation history"""
-    if not agent.history:
+    # Access history through the conversation manager since it's been refactored
+    try:
+        # Try to access the history via conversation manager first
+        if hasattr(agent, 'conversation_manager') and agent.conversation_manager:
+            history = agent.conversation_manager.history
+        else:
+            # Fallback to direct agent.history if conversation manager is not available
+            history = getattr(agent, 'history', [])
+    except AttributeError:
+        # If there's any issue accessing the history, default to empty list
+        history = []
+
+    if not history:
         console.print(Panel("[italic dim]No conversation history yet.[/italic dim]", border_style="dim", expand=False))
         return
 
@@ -647,7 +659,7 @@ def display_conversation_history(agent):
     history_table.add_column("Role", style="#7CFC00", width=10)
     history_table.add_column("Content Preview", style="white")
 
-    for i, entry in enumerate(agent.history):
+    for i, entry in enumerate(history):
         role = entry["role"]
         content = entry["content"]
         content_preview = content[:80]  # Shortened preview
@@ -668,7 +680,7 @@ def display_conversation_history(agent):
             )
 
     console.print("\n", history_table)
-    console.print(Panel(f"[white]Total messages: {len(agent.history)}[/white]", border_style="#40E0D0", expand=False))
+    console.print(Panel(f"[white]Total messages: {len(history)}[/white]", border_style="#40E0D0", expand=False))
     console.print()  # Add spacing
 
 def display_models(agent):
