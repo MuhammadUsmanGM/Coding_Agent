@@ -618,7 +618,7 @@ def show_loading_animation(stop_event):
     symbols = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']  # Spinning animation
     i = 0
     while not stop_event.is_set():
-        # Use Rich console to properly format the text
+        # Use sys.stdout for direct output without Rich formatting to avoid conflicts
         sys.stdout.write(f'\r{symbols[i % len(symbols)]} Processing your request...')
         sys.stdout.flush()
         i += 1
