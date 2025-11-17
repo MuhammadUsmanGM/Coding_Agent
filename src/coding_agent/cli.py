@@ -420,76 +420,117 @@ def display_themes():
 
 def display_help():
     """Display help information with all available commands"""
-    # Create a visually appealing help table
-    help_table = Table(
-        title="[bold #9370DB]Available Commands[/bold #9370DB]",
-        title_style="bold #9370DB",
-        box=HEAVY_HEAD,
+    # Create a visually stunning header for the help
+    help_header = Panel(
+        "[bold #BA55D3]🌟 Welcome to Codeius AI Coding Agent Help Center 🌟[/bold #BA55D3]\n\n"
+        "[white]Use these commands to interact with the agent:[/white]",
+        title="[bold #9370DB]Command Guide[/bold #9370DB]",
         border_style="#9370DB",
+        expand=False
+    )
+    console.print(help_header)
+
+    # Create a visually appealing commands grid using Table
+    commands_table = Table(
+        title="[bold #40E0D0]Available Commands[/bold #40E0D0]",
+        title_style="bold #40E0D0",
+        box=HEAVY_HEAD,
+        border_style="#40E0D0",
         expand=True
     )
-    help_table.add_column("Command", style="#7CFC00", no_wrap=True)
-    help_table.add_column("Description", style="white")
+    commands_table.add_column("🔢 #", style="#7CFC00", justify="center", width=3)
+    commands_table.add_column("✨ Command", style="#7CFC00", width=20)
+    commands_table.add_column("📝 Description", style="white")
 
-    help_table.add_row("/models", "List all available AI models")
-    help_table.add_row("/mcp", "List available MCP tools")
-    help_table.add_row("/dashboard", "Show real-time code quality dashboard")
-    help_table.add_row("/themes", "Show available visual themes")
-    help_table.add_row("/ocr [image_path]", "Extract text from an image using OCR")
-    help_table.add_row("/refactor [file_path]", "Analyze and refactor code in a file")
-    help_table.add_row("/diff [file1] [file2]", "Compare two files or directories")
-    help_table.add_row("/scaffold [name] [template]", "Generate project scaffolding")
-    help_table.add_row("/env [action] [variables]", "Manage environment files")
-    help_table.add_row("/rename [old] [new] [file]", "Batch rename variables")
-    help_table.add_row("/plot [metric]", "Plot code metrics and data")
-    help_table.add_row("/update_docs [type] [args]", "Update documentation files")
-    help_table.add_row("/snippet [action] [args]", "Manage code snippets")
-    help_table.add_row("/scrape [file_or_dir_or_url] [css_selector]", "Scrape web content")
-    help_table.add_row("/config [action] [args]", "Manage configurations")
-    help_table.add_row("/schedule [task_type] [interval] [target]", "Schedule tasks to run automatically")
-    help_table.add_row("/inspect [package]", "Inspect package information")
-    help_table.add_row("/plugins", "List available plugins")
-    help_table.add_row("/create_plugin [name]", "Create a new plugin skeleton")
-    help_table.add_row("/switch [model_key]", "Switch to a specific model")
-    help_table.add_row("/help", "Show this help message")
-    help_table.add_row("/clear", "Clear the conversation history")
-    help_table.add_row("/exit", "Exit the application")
+    commands_list = [
+        ("/models", "List all available AI models"),
+        ("/mcp", "List available MCP tools"),
+        ("/dashboard", "Show real-time code quality dashboard"),
+        ("/themes", "Show available visual themes"),
+        ("/ocr [image_path]", "Extract text from an image using OCR"),
+        ("/refactor [file_path]", "Analyze and refactor code in a file"),
+        ("/diff [file1] [file2]", "Compare two files or directories"),
+        ("/scaffold [name] [template]", "Generate project scaffolding"),
+        ("/env [action] [variables]", "Manage environment files"),
+        ("/rename [old] [new] [file]", "Batch rename variables"),
+        ("/plot [metric]", "Plot code metrics and data"),
+        ("/update_docs [type] [args]", "Update documentation files"),
+        ("/snippet [action] [args]", "Manage code snippets"),
+        ("/scrape [file_or_dir_or_url] [css_selector]", "Scrape web content"),
+        ("/config [action] [args]", "Manage configurations"),
+        ("/schedule [task_type] [interval] [target]", "Schedule tasks to run automatically"),
+        ("/inspect [package]", "Inspect package information"),
+        ("/plugins", "List available plugins"),
+        ("/create_plugin [name]", "Create a new plugin skeleton"),
+        ("/switch [model_key]", "Switch to a specific model"),
+        ("/help", "Show this help message"),
+        ("/clear", "Clear the conversation history"),
+        ("/exit", "Exit the application")
+    ]
 
-    console.print("\n", help_table)
+    for idx, (command, desc) in enumerate(commands_list, 1):
+        commands_table.add_row(str(idx), f"[bold #00FFFF]{command}[/bold #00FFFF]", desc)
 
-    # MCP Tools table
+    console.print("\n", commands_table)
+
+    # MCP Tools section with enhanced visual
+    mcp_header = Panel(
+        "[bold #FFA500]🔧 MCP Tools - Enhanced Functionality 🔧[/bold #FFA500]",
+        border_style="#FFA500",
+        expand=False
+    )
+    console.print(mcp_header)
+
+    # MCP Tools table with enhanced styling
     mcp_table = Table(
-        title="[bold #9370DB]MCP Tools Available[/bold #9370DB]",
+        title="[bold #9370DB]Integrated Tools[/bold #9370DB]",
         title_style="bold #9370DB",
         box=HEAVY_HEAD,
         border_style="#9370DB",
         expand=True
     )
     mcp_table.add_column("Tool", style="#7CFC00", no_wrap=True)
-    mcp_table.add_column("Description", style="white")
+    mcp_table.add_column("Capabilities", style="white")
 
-    mcp_table.add_row("code-runner", "Execute Python code in sandboxed environment")
-    mcp_table.add_row("filesystem", "Access and manage files in workspace")
-    mcp_table.add_row("duckduckgo", "Perform web searches")
-    mcp_table.add_row("code-search", "Search for functions, classes, and TODOs in code")
-    mcp_table.add_row("shell", "Execute safe shell commands")
-    mcp_table.add_row("testing", "Run automated tests")
-    mcp_table.add_row("doc-search", "Search documentation files")
-    mcp_table.add_row("database", "Query local SQLite databases")
-    mcp_table.add_row("ocr", "Extract text from images")
-    mcp_table.add_row("refactor", "Analyze and refactor code")
-    mcp_table.add_row("diff", "Compare files and directories")
-    mcp_table.add_row("automation", "Automate repetitive coding tasks")
-    mcp_table.add_row("visualization", "Create plots and visualizations")
-    mcp_table.add_row("self_documenting", "Auto-update documentation")
-    mcp_table.add_row("package_inspector", "Inspect packages and dependencies")
-    mcp_table.add_row("snippet_manager", "Manage code snippets and templates")
-    mcp_table.add_row("web_scraper", "Scrape web content from files/urls")
-    mcp_table.add_row("config_manager", "Manage configurations and credentials")
-    mcp_table.add_row("task_scheduler", "Schedule tasks to run automatically")
+    mcp_tools_list = [
+        ("code-runner", "Execute Python code in sandboxed environment"),
+        ("filesystem", "Access and manage files in workspace"),
+        ("duckduckgo", "Perform web searches"),
+        ("code-search", "Search for functions, classes, and TODOs in code"),
+        ("shell", "Execute safe shell commands"),
+        ("testing", "Run automated tests"),
+        ("doc-search", "Search documentation files"),
+        ("database", "Query local SQLite databases"),
+        ("ocr", "Extract text from images"),
+        ("refactor", "Analyze and refactor code"),
+        ("diff", "Compare files and directories"),
+        ("automation", "Automate repetitive coding tasks"),
+        ("visualization", "Create plots and visualizations"),
+        ("self_documenting", "Auto-update documentation"),
+        ("package_inspector", "Inspect packages and dependencies"),
+        ("snippet_manager", "Manage code snippets and templates"),
+        ("web_scraper", "Scrape web content from files/urls"),
+        ("config_manager", "Manage configurations and credentials"),
+        ("task_scheduler", "Schedule tasks to run automatically")
+    ]
+
+    for tool, cap in mcp_tools_list:
+        mcp_table.add_row(f"[bold #FFA500]{tool}[/bold #FFA500]", cap)
 
     console.print("\n", mcp_table)
-    console.print()
+
+    # Add a visual separator and tips section
+    console.print(Rule("[bold #8A2BE2]💡 Tips & Tricks 💡[/bold #8A2BE2]", style="#8A2BE2", align="center"))
+
+    tips_table = Table(box=HEAVY_HEAD, border_style="#8A2BE2", expand=True)
+    tips_table.add_column("Tip", style="#8A2BE2")
+    tips_table.add_row("Use [bold #00FFFF]/models[/bold #00FFFF] to see available AI models")
+    tips_table.add_row("Use [bold #00FFFF]/switch model_name[/bold #00FFFF] to change models mid-conversation")
+    tips_table.add_row("Type [bold #00FFFF]exit[/bold #00FFFF] to quit anytime")
+    tips_table.add_row("Use [bold #00FFFF]/clear[/bold #00FFFF] to reset conversation history")
+
+    console.print("\n", tips_table)
+    console.print()  # Add spacing
 
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
@@ -577,7 +618,8 @@ def show_loading_animation(stop_event):
     symbols = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']  # Spinning animation
     i = 0
     while not stop_event.is_set():
-        sys.stdout.write(f'\r[bold #00FFFF]{symbols[i % len(symbols)]} Processing your request...[/bold #00FFFF]')
+        # Use Rich console to properly format the text
+        sys.stdout.write(f'\r{symbols[i % len(symbols)]} Processing your request...')
         sys.stdout.flush()
         i += 1
         time.sleep(0.1)
@@ -819,8 +861,8 @@ def main():
 
     while True:
         try:
-            # Styled prompt with more distinct visual indicator and auto-completion
-            prompt_text = HTML('<style fg="#00FFFF" bg="black">🤖 Enter your query: </style> ')
+            # Styled prompt with enhanced visual indicator and auto-completion
+            prompt_text = HTML('<style fg="#00FFFF" bg="black"><b>⌨️ Enter your query:</b> </style> ')
             prompt = session.prompt(
                 prompt_text,
                 default='',
@@ -1024,7 +1066,7 @@ def main():
                 time.sleep(1)  # Brief pause to enjoy the goodbye message
                 break
             # Show loading animation while waiting for agent response
-            console.print(f"[bold #00FFFF]Processing query...[/bold #00FFFF]")
+            console.print(f"[bold #00FFFF]🔍 Processing query...[/bold #00FFFF]")
             import threading
             stop_event = threading.Event()
             loading_thread = threading.Thread(target=show_loading_animation, args=(stop_event,))
@@ -1036,6 +1078,22 @@ def main():
                 stop_event.set()  # Stop the loading animation
                 loading_thread.join()  # Wait for the thread to finish
                 print()  # Add a newline after the loading message is cleared
+
+            # Save the conversation to history - fixed for refactored architecture
+            try:
+                # Try to access the history via conversation manager first
+                if hasattr(agent, 'conversation_manager') and hasattr(agent.conversation_manager, 'add_message'):
+                    agent.conversation_manager.add_message("user", prompt)
+                    agent.conversation_manager.add_message("assistant", result if not result.startswith("**Agent Plan:") else result)
+                else:
+                    # Fallback to direct history if conversation manager is not available
+                    agent.history.append({"role": "user", "content": prompt})
+                    agent.history.append({"role": "assistant", "content": result if not result.startswith("**Agent Plan:") else result})
+            except AttributeError:
+                # If there's any issue accessing the history, use the direct method
+                if hasattr(agent, 'history'):
+                    agent.history.append({"role": "user", "content": prompt})
+                    agent.history.append({"role": "assistant", "content": result if not result.startswith("**Agent Plan:") else result})
 
             if result.startswith("**Agent Plan:**"):  # Looks like JSON action plan is parsed
                 if confirm_safe_execution(result):
@@ -1070,9 +1128,13 @@ def main():
                 )
                 console.print(agent_panel)
                 console.print()  # Add blank line for readability
-                
+
             # Optionally show recent conversation history
-            if len(agent.history) > 0 and len([h for h in agent.history if h["role"] == "user"]) % 3 == 0:
+            history_check = getattr(agent, 'history', [])
+            if hasattr(agent, 'conversation_manager') and hasattr(agent.conversation_manager, 'history'):
+                history_check = agent.conversation_manager.history
+
+            if len(history_check) > 0 and len([h for h in history_check if h["role"] == "user"]) % 3 == 0:
                 show_history = Prompt.ask("\n[bold yellow]Show conversation history?[/bold yellow] [Y/n]", default="Y").strip().lower()
                 if show_history in ("y", "yes", ""):
                     display_conversation_history(agent)
