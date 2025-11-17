@@ -420,50 +420,76 @@ def display_themes():
 
 def display_help():
     """Display help information with all available commands"""
-    console.print("\n[bold #9370DB]Available Commands:[/bold #9370DB]")
-    console.print("  [cyan]/models[/cyan] - List all available AI models")
-    console.print("  [cyan]/mcp[/cyan] - List available MCP tools")
-    console.print("  [cyan]/dashboard[/cyan] - Show real-time code quality dashboard")
-    console.print("  [cyan]/themes[/cyan] - Show available visual themes")
-    console.print("  [cyan]/ocr [image_path][/cyan] - Extract text from an image using OCR")
-    console.print("  [cyan]/refactor [file_path][/cyan] - Analyze and refactor code in a file")
-    console.print("  [cyan]/diff [file1] [file2][/cyan] - Compare two files or directories")
-    console.print("  [cyan]/scaffold [name] [template][/cyan] - Generate project scaffolding")
-    console.print("  [cyan]/env [action] [variables][/cyan] - Manage environment files")
-    console.print("  [cyan]/rename [old] [new] [file][/cyan] - Batch rename variables")
-    console.print("  [cyan]/plot [metric][/cyan] - Plot code metrics and data")
-    console.print("  [cyan]/update_docs [type] [args][/cyan] - Update documentation files")
-    console.print("  [cyan]/snippet [action] [args][/cyan] - Manage code snippets")
-    console.print("  [cyan]/scrape [file_or_dir_or_url] [css_selector][/cyan] - Scrape web content")
-    console.print("  [cyan]/config [action] [args][/cyan] - Manage configurations")
-    console.print("  [cyan]/schedule [task_type] [interval] [target][/cyan] - Schedule tasks to run automatically")
-    console.print("  [cyan]/inspect [package][/cyan] - Inspect package information")
-    console.print("  [cyan]/plugins[/cyan] - List available plugins")
-    console.print("  [cyan]/create_plugin [name][/cyan] - Create a new plugin skeleton")
-    console.print("  [cyan]/switch [model_key][/cyan] - Switch to a specific model")
-    console.print("  [cyan]/help[/cyan] - Show this help message")
-    console.print("  [cyan]/clear[/cyan] - Clear the conversation history")
-    console.print("  [cyan]/exit[/cyan] - Exit the application\n")
-    console.print("[bold #9370DB]MCP Tools Available:[/bold #9370DB]")
-    console.print("  [cyan]code-runner[/cyan] - Execute Python code in sandboxed environment")
-    console.print("  [cyan]filesystem[/cyan] - Access and manage files in workspace")
-    console.print("  [cyan]duckduckgo[/cyan] - Perform web searches")
-    console.print("  [cyan]code-search[/cyan] - Search for functions, classes, and TODOs in code")
-    console.print("  [cyan]shell[/cyan] - Execute safe shell commands")
-    console.print("  [cyan]testing[/cyan] - Run automated tests")
-    console.print("  [cyan]doc-search[/cyan] - Search documentation files")
-    console.print("  [cyan]database[/cyan] - Query local SQLite databases")
-    console.print("  [cyan]ocr[/cyan] - Extract text from images")
-    console.print("  [cyan]refactor[/cyan] - Analyze and refactor code")
-    console.print("  [cyan]diff[/cyan] - Compare files and directories")
-    console.print("  [cyan]automation[/cyan] - Automate repetitive coding tasks")
-    console.print("  [cyan]visualization[/cyan] - Create plots and visualizations")
-    console.print("  [cyan]self_documenting[/cyan] - Auto-update documentation")
-    console.print("  [cyan]package_inspector[/cyan] - Inspect packages and dependencies")
-    console.print("  [cyan]snippet_manager[/cyan] - Manage code snippets and templates")
-    console.print("  [cyan]web_scraper[/cyan] - Scrape web content from files/urls")
-    console.print("  [cyan]config_manager[/cyan] - Manage configurations and credentials")
-    console.print("  [cyan]task_scheduler[/cyan] - Schedule tasks to run automatically\n")
+    # Create a visually appealing help table
+    help_table = Table(
+        title="[bold #9370DB]Available Commands[/bold #9370DB]",
+        title_style="bold #9370DB",
+        box=HEAVY_HEAD,
+        border_style="#9370DB",
+        expand=True
+    )
+    help_table.add_column("Command", style="#7CFC00", no_wrap=True)
+    help_table.add_column("Description", style="white")
+
+    help_table.add_row("/models", "List all available AI models")
+    help_table.add_row("/mcp", "List available MCP tools")
+    help_table.add_row("/dashboard", "Show real-time code quality dashboard")
+    help_table.add_row("/themes", "Show available visual themes")
+    help_table.add_row("/ocr [image_path]", "Extract text from an image using OCR")
+    help_table.add_row("/refactor [file_path]", "Analyze and refactor code in a file")
+    help_table.add_row("/diff [file1] [file2]", "Compare two files or directories")
+    help_table.add_row("/scaffold [name] [template]", "Generate project scaffolding")
+    help_table.add_row("/env [action] [variables]", "Manage environment files")
+    help_table.add_row("/rename [old] [new] [file]", "Batch rename variables")
+    help_table.add_row("/plot [metric]", "Plot code metrics and data")
+    help_table.add_row("/update_docs [type] [args]", "Update documentation files")
+    help_table.add_row("/snippet [action] [args]", "Manage code snippets")
+    help_table.add_row("/scrape [file_or_dir_or_url] [css_selector]", "Scrape web content")
+    help_table.add_row("/config [action] [args]", "Manage configurations")
+    help_table.add_row("/schedule [task_type] [interval] [target]", "Schedule tasks to run automatically")
+    help_table.add_row("/inspect [package]", "Inspect package information")
+    help_table.add_row("/plugins", "List available plugins")
+    help_table.add_row("/create_plugin [name]", "Create a new plugin skeleton")
+    help_table.add_row("/switch [model_key]", "Switch to a specific model")
+    help_table.add_row("/help", "Show this help message")
+    help_table.add_row("/clear", "Clear the conversation history")
+    help_table.add_row("/exit", "Exit the application")
+
+    console.print("\n", help_table)
+
+    # MCP Tools table
+    mcp_table = Table(
+        title="[bold #9370DB]MCP Tools Available[/bold #9370DB]",
+        title_style="bold #9370DB",
+        box=HEAVY_HEAD,
+        border_style="#9370DB",
+        expand=True
+    )
+    mcp_table.add_column("Tool", style="#7CFC00", no_wrap=True)
+    mcp_table.add_column("Description", style="white")
+
+    mcp_table.add_row("code-runner", "Execute Python code in sandboxed environment")
+    mcp_table.add_row("filesystem", "Access and manage files in workspace")
+    mcp_table.add_row("duckduckgo", "Perform web searches")
+    mcp_table.add_row("code-search", "Search for functions, classes, and TODOs in code")
+    mcp_table.add_row("shell", "Execute safe shell commands")
+    mcp_table.add_row("testing", "Run automated tests")
+    mcp_table.add_row("doc-search", "Search documentation files")
+    mcp_table.add_row("database", "Query local SQLite databases")
+    mcp_table.add_row("ocr", "Extract text from images")
+    mcp_table.add_row("refactor", "Analyze and refactor code")
+    mcp_table.add_row("diff", "Compare files and directories")
+    mcp_table.add_row("automation", "Automate repetitive coding tasks")
+    mcp_table.add_row("visualization", "Create plots and visualizations")
+    mcp_table.add_row("self_documenting", "Auto-update documentation")
+    mcp_table.add_row("package_inspector", "Inspect packages and dependencies")
+    mcp_table.add_row("snippet_manager", "Manage code snippets and templates")
+    mcp_table.add_row("web_scraper", "Scrape web content from files/urls")
+    mcp_table.add_row("config_manager", "Manage configurations and credentials")
+    mcp_table.add_row("task_scheduler", "Schedule tasks to run automatically")
+
+    console.print("\n", mcp_table)
+    console.print()
 
 def display_welcome_screen():
     """Display an enhanced welcome screen with project info and instructions"""
@@ -473,7 +499,7 @@ def display_welcome_screen():
 
     # Create a welcome table with project information
     welcome_table = Table(
-        title="[bold #9370DB]Welcome to Codeius AI Coding Agent[/bold #9370DB]",
+        title="[bold #9370DB on #00008B]Welcome to Codeius AI Coding Agent[/bold #9370DB on #00008B]",
         title_style="bold #9370DB",
         box=HEAVY_HEAD,
         border_style="#9370DB",
@@ -493,6 +519,17 @@ def display_welcome_screen():
 
     console.print(welcome_table)
 
+    # Create a visually appealing status panel
+    status_panel = Panel(
+        "[bold #00FFFF]Status:[/bold #00FFFF] [green]All systems operational[/green]\n"
+        "[bold #00FFFF]Version:[/bold #00FFFF] [magenta]1.0.0[/magenta]\n"
+        "[bold #00FFFF]Uptime:[/bold #00FFFF] [cyan]Ready for use[/cyan]\n",
+        title="[bold #40E0D0]System Status[/bold #40E0D0]",
+        border_style="#40E0D0",
+        expand=False
+    )
+    console.print(status_panel)
+
     # Instructions panel with gradient-like effect
     console.print("\n[bold #7CFC00]How to Use:[/bold #7CFC00]")
     instructions_text = (
@@ -509,58 +546,146 @@ def display_welcome_screen():
         border_style="#40E0D0"  # Turquoise
     ))
 
-    # Add a decorative separator
-    console.print(Rule("[bold #BA55D3]Powered by Advanced AI[/bold #BA55D3]", style="#BA55D3", align="center"))
+    # Add a decorative separator with gradient effect
+    console.print(Rule("[bold #BA55D3]Powered by Advanced AI and Cutting-Edge Technology[/bold #BA55D3]", style="#BA55D3", align="center"))
     console.print()  # Extra spacing
 
 def show_loading_animation(stop_event):
     """Show a loading animation while waiting for agent response"""
-    symbols = ['|', '/', '-', '\\']
+    symbols = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']  # Spinning animation
     i = 0
     while not stop_event.is_set():
-        sys.stdout.write(f'\r[bold #00FFFF]{symbols[i % len(symbols)]} Thinking...[/bold #00FFFF]')
+        sys.stdout.write(f'\r[bold #00FFFF]{symbols[i % len(symbols)]} Processing your request...[/bold #00FFFF]')
         sys.stdout.flush()
         i += 1
         time.sleep(0.1)
     sys.stdout.write('\r')  # Clear the loading message
     sys.stdout.flush()
 
+def show_processing_progress(description="Processing"):
+    """Show a progress bar for longer operations"""
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+    ) as progress:
+        task = progress.add_task(f"[#00FFFF]{description}...", total=100)
+        while not progress.finished:
+            progress.update(task, advance=1)
+            time.sleep(0.05)
+            if progress._tasks[task].completed >= 100:
+                break
+        progress.update(task, completed=100, description=f"[#32CD32]{description} completed!")
+        time.sleep(0.5)  # Brief pause to show completion
+
+def format_agent_response(response_text):
+    """Format agent response with rich styling for better readability"""
+    # Add visual styling to different parts of the response
+    import re
+
+    # Format action steps with special markers
+    response_text = re.sub(r'(\*\*Agent Plan:\*\*|Agent Plan:)', r'[bold #9370DB]\1[/bold #9370DB]', response_text)
+
+    # Format file operations
+    response_text = re.sub(r'(`[^`]+`)', r'[bold #FFD700]\1[/bold #FFD700]', response_text)
+
+    # Format success indicators
+    response_text = re.sub(r'(✅)', r'[bold #32CD32]\1[/bold #32CD32]', response_text)
+
+    # Format error indicators
+    response_text = re.sub(r'(❌)', r'[bold #FF4500]\1[/bold #FF4500]', response_text)
+
+    # Format warning indicators
+    response_text = re.sub(r'(⚠️)', r'[bold #FFA500]\1[/bold #FFA500]', response_text)
+
+    # Format web search indicators
+    response_text = re.sub(r'(🌐)', r'[bold #00FFFF]\1[/bold #00FFFF]', response_text)
+
+    # Format agent explanations
+    response_text = re.sub(r'(-\s[^\.!\n]*\.|- [^\n]*)', r'[#BA55D3]\1[/#BA55D3]', response_text)
+
+    return response_text
+
 def display_conversation_history(agent):
     """Display a summary of the conversation history"""
     if not agent.history:
-        console.print("[italic dim]No conversation history yet.[/italic dim]")
+        console.print(Panel("[italic dim]No conversation history yet.[/italic dim]", border_style="dim", expand=False))
         return
 
-    console.print("\n[bold #9370DB]Conversation History:[/bold #9370DB]")
+    # Create a visually appealing conversation history table
+    history_table = Table(
+        title="[bold #9370DB]Conversation History[/bold #9370DB]",
+        title_style="bold #9370DB",
+        box=HEAVY_HEAD,
+        border_style="#9370DB",
+        expand=True
+    )
+    history_table.add_column("#", style="#7CFC00", justify="right", width=3)
+    history_table.add_column("Role", style="#7CFC00", width=10)
+    history_table.add_column("Content Preview", style="white")
+
     for i, entry in enumerate(agent.history):
         role = entry["role"]
         content = entry["content"]
+        content_preview = content[:80]  # Shortened preview
+        content_preview = content_preview.strip()
+        content_preview = f"{content_preview}{'...' if len(content) > 80 else ''}"
+
         if role == "user":
-            console.print(f"[#7CFC00]You ({i+1}):[/#7CFC00] {content[:100]}{'...' if len(content) > 100 else ''}")
+            history_table.add_row(
+                str(i+1),
+                "[bold #7CFC00]You[/bold #7CFC00]",
+                f"[#7CFC00]{content_preview}[/#7CFC00]"
+            )
         elif role == "assistant":
-            content_preview = content[:100]
-            # Remove any leading/trailing newlines or extra whitespace
-            content_preview = content_preview.strip()
-            console.print(f"[#BA55D3]Agent ({i+1}):[/#BA55D3] {content_preview}{'...' if len(content) > 100 else ''}")
+            history_table.add_row(
+                str(i+1),
+                "[bold #BA55D3]Agent[/bold #BA55D3]",
+                f"[#BA55D3]{content_preview}[/#BA55D3]"
+            )
+
+    console.print("\n", history_table)
+    console.print(Panel(f"[white]Total messages: {len(agent.history)}[/white]", border_style="#40E0D0", expand=False))
     console.print()  # Add spacing
 
 def display_models(agent):
     """Display available AI models to the user (excluding MCP tools)"""
     models = agent.get_available_models()
     current_model = agent.get_current_model_info()
-    
+
     if not models:
-        console.print("[yellow]No AI models available.[/yellow]")
+        console.print(Panel("[yellow]No AI models available.[/yellow]", border_style="yellow", expand=False))
         return
-    
-    console.print("\n[bold blue]Available AI Models:[/bold blue]")
+
+    # Create a visually appealing table for models
+    models_table = Table(
+        title="[bold #9370DB]Available AI Models[/bold #9370DB]",
+        title_style="bold #9370DB",
+        box=HEAVY_HEAD,
+        border_style="#9370DB",
+        expand=True
+    )
+    models_table.add_column("Model Key", style="#7CFC00", no_wrap=True)
+    models_table.add_column("Name", style="white")
+    models_table.add_column("Provider", style="cyan")
+    models_table.add_column("Status", style="#32CD32")
+
     for key, model_info in models.items():
         if current_model and key == current_model['key']:
             # Highlight the currently active model
-            console.print(f"  [green]→ {key}[/green]: {model_info['name']} ({model_info['provider']}) [Current]")
+            models_table.add_row(
+                f"[bold green]→ {key}[/bold green]",
+                model_info['name'],
+                model_info['provider'],
+                "[bold green]ACTIVE[/bold green]"
+            )
         else:
-            console.print(f"  [cyan]{key}[/cyan]: {model_info['name']} ({model_info['provider']})")
-    console.print("\n[bold]To switch models, use: /switch [model_key][/bold]\n")
+            models_table.add_row(key, model_info['name'], model_info['provider'], "Available")
+
+    console.print("\n", models_table)
+    console.print(Panel("[bold]To switch models, use: /switch [model_key][/bold]", border_style="#40E0D0", expand=False))
+    console.print()
 
 def display_mcp_tools(agent):
     """Display available MCP tools to the user"""
@@ -624,22 +749,34 @@ class CustomCompleter(Completer):
                         yield Completion(cmd, start_position=-len(text))
 
 def main():
+    # Show startup animation using sys.stdout for direct output without Rich
+    import sys
+    for i in range(3):
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        time.sleep(0.3)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
     display_welcome_screen()
+
+    console.print(Panel("[bold #32CD32]Initialization complete![/bold #32CD32]\n[white]Ready to assist with your coding tasks.[/white]", border_style="#32CD32", expand=False))
+    time.sleep(0.5)  # Brief pause for visual effect
 
     agent = CodingAgent()
 
     # Create a custom completer that handles both commands and model suggestions
     completer = CustomCompleter(agent)
 
-    # Create a prompt session with styling and custom completion for a better input experience
+    # Create a prompt session with enhanced styling and custom completion
     style = Style.from_dict({
-        'prompt': 'bold cyan',
+        'prompt': 'bold #00FFFF',
         'completion-menu': 'bg:#262626 #ffffff',
         'completion-menu.completion.current': 'bg:#4a4a4a #ffffff',
         'completion-menu.meta.completion': 'bg:#262626 #ffffff',
         'completion-menu.meta.completion.current': 'bg:#4a4a4a #ffffff',
     })
-    
+
     session = PromptSession(
         completer=completer,
         style=style,
@@ -838,14 +975,22 @@ def main():
                 display_conversation_history(agent)
 
                 # Create a visually appealing goodbye message
-                goodbye_table = Table(box=HEAVY_HEAD, border_style="#7CFC00", expand=True)
+                goodbye_table = Table(
+                    title="[bold #FFD700]Thank You![/bold #FFD700]",
+                    box=HEAVY_HEAD,
+                    border_style="#7CFC00",
+                    expand=True,
+                    title_style="bold #FFD700 on #00008B"
+                )
                 goodbye_table.add_column("Message", style="#7CFC00", justify="center")
                 goodbye_table.add_row("[bold #7CFC00]Thank you for using Codeius AI Coding Agent![/bold #7CFC00]")
                 goodbye_table.add_row("[#00FFFF]We hope you enjoyed the experience[/#00FFFF]")
                 goodbye_table.add_row("[bold #BA55D3]Come back soon![/bold #BA55D3]")
                 console.print("\n", goodbye_table)
+                time.sleep(1)  # Brief pause to enjoy the goodbye message
                 break
             # Show loading animation while waiting for agent response
+            console.print(f"[bold #00FFFF]Processing query...[/bold #00FFFF]")
             import threading
             stop_event = threading.Event()
             loading_thread = threading.Thread(target=show_loading_animation, args=(stop_event,))
@@ -860,14 +1005,30 @@ def main():
 
             if result.startswith("**Agent Plan:**"):  # Looks like JSON action plan is parsed
                 if confirm_safe_execution(result):
-                    console.print("\n[bold #32CD32]✅ Success: Action(s) executed successfully.[/bold #32CD32]\n")
+                    success_panel = Panel(
+                        "[bold #32CD32]✅ Success![/bold #32CD32]\n\n[white]Action(s) executed successfully.[/white]",
+                        border_style="#32CD32",
+                        expand=False,
+                        padding=(1, 1)
+                    )
+                    console.print(success_panel)
+                    console.print()  # Add blank line
                 else:
-                    console.print("[bold #FF4500]❌ Cancelled: Action(s) were not executed.[/bold #FF4500]\n")
+                    cancel_panel = Panel(
+                        "[bold #FF4500]❌ Cancelled![/bold #FF4500]\n\n[white]Action(s) were not executed.[/white]",
+                        border_style="#FF4500",
+                        expand=False,
+                        padding=(1, 1)
+                    )
+                    console.print(cancel_panel)
+                    console.print()  # Add blank line
             else:
                 # Enhanced agent response display with improved visual hierarchy
+                # Format the response with rich styling
+                formatted_result = format_agent_response(result)
                 agent_panel = Panel(
-                    result,
-                    title="[bold #BA55D3]🤖 Codeius Agent[/bold #BA55D3]",
+                    formatted_result,
+                    title="[bold #BA55D3]🤖 Codeius Agent Response[/bold #BA55D3]",
                     expand=False,
                     border_style="#BA55D3",  # Medium purple border
                     padding=(1, 1),
@@ -888,12 +1049,19 @@ def main():
             display_conversation_history(agent)
 
             # Create a visually appealing goodbye message
-            goodbye_table = Table(box=HEAVY_HEAD, border_style="#7CFC00", expand=True)
+            goodbye_table = Table(
+                title="[bold #FFD700]Thank You![/bold #FFD700]",
+                box=HEAVY_HEAD,
+                border_style="#7CFC00",
+                expand=True,
+                title_style="bold #FFD700 on #00008B"
+            )
             goodbye_table.add_column("Message", style="#7CFC00", justify="center")
             goodbye_table.add_row("[bold #7CFC00]Thank you for using Codeius AI Coding Agent![/bold #7CFC00]")
             goodbye_table.add_row("[#00FFFF]We hope you enjoyed the experience[/#00FFFF]")
             goodbye_table.add_row("[bold #BA55D3]Come back soon![/bold #BA55D3]")
             console.print("\n", goodbye_table)
+            time.sleep(1)  # Brief pause to enjoy the goodbye message
             break
         except Exception as e:
             console.print(f"[bold red]❌ Error: {e}[/bold red]")
