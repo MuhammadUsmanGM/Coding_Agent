@@ -1,15 +1,15 @@
 # Codeius AI Coding Agent
 
-Codeius is an AI-powered coding assistant that helps with various programming tasks through a command-line interface. It can read and write files, perform git operations, run tests, search code, execute shell commands, and conduct web searches to assist with coding tasks.
+Codeius is an advanced AI-powered coding assistant that helps with various programming tasks through a command-line interface. It can read and write files, perform git operations, run tests, search code, execute shell commands, and conduct web searches to assist with coding tasks. With enhanced security, performance, and a beautiful visual interface, Codeius is your intelligent coding companion.
 
 ## Features
 
-- **File Operations**: Read and write source files in your workspace
+- **File Operations**: Read and write source files in your workspace with advanced security validation
 - **Git Operations**: Stage and commit files
 - **Web Search**: Perform real-time web searches via DuckDuckGo MCP server (no API key required)
 - **Multiple LLM Providers**: Uses both Groq and Google AI models with automatic failover
 - **Model Switching**: Switch between available models using `/models` and `/switch` commands
-- **Rich CLI Interface**: Beautiful, user-friendly command-line interface
+- **Rich CLI Interface**: Beautiful, user-friendly command-line interface with stunning visuals
 - **Code Search & Navigation**: Find functions, classes, and TODOs in your project
 - **Shell Commands**: Execute safe shell commands within the project
 - **Automated Testing**: Run pytest tests directly from the agent
@@ -17,6 +17,7 @@ Codeius is an AI-powered coding assistant that helps with various programming ta
 - **Database Access**: Query local SQLite databases safely
 - **Real-time Dashboard**: Monitor code quality, test coverage, and build status
 - **Visual Recognition/OCR**: Extract text from images using OCR
+- **Code Analysis & Quality**: Analyze code for style, security, and complexity issues
 - **Code Refactoring & Quality**: Analyze code style, detect anti-patterns, and suggest refactorings
 - **File/Directory Diff Tool**: Compare content of two files or directories for versioning and code reviews
 - **Local Plugin System**: Extensible architecture allowing users to add custom tools by dropping in Python scripts
@@ -28,6 +29,10 @@ Codeius is an AI-powered coding assistant that helps with various programming ta
 - **Offline Web Scraping Tool**: Scrape static HTML files or local sites with BeautifulSoup, for documentation or data extraction tasks
 - **Advanced Configuration/Settings Tool**: Interactive config/credentials manager for .env, YAML, or TOML settings—all changes local and secure
 - **Scheduling/Task Automation Tool**: Local cron/task scheduler using schedule, letting the agent run commands, tests, or code checks automatically
+- **Enhanced Security**: Multiple security layers to prevent path traversal, unauthorized access, and code injection
+- **Performance Optimizations**: Caching, rate limiting, and efficient resource usage
+- **Comprehensive Logging**: Detailed logs for debugging and monitoring
+- **Type Safety**: Full type hinting throughout the codebase for better reliability
 
 ## Installation
 
@@ -98,6 +103,15 @@ GROQ_API_KEY=your_groq_api_key
 GOOGLE_API_KEY=your_google_api_key
 GROQ_API_MODEL=llama3-70b-8192  # Optional, defaults to llama3-70b-8192
 GOOGLE_API_MODEL=gemini-1.5-flash  # Optional, defaults to gemini-1.5-flash
+MAX_TOKENS=2048  # Optional, default max tokens for LLM responses
+CONVERSATION_HISTORY_LIMIT=50  # Optional, default number of conversation turns to keep
+MAX_FILE_SIZE_MB=10  # Optional, maximum file size in MB that can be read
+MAX_CONCURRENT_OPERATIONS=5  # Optional, maximum concurrent operations
+RATE_LIMIT_REQUESTS=100  # Optional, rate limit for API calls per window
+RATE_LIMIT_WINDOW_SECONDS=60  # Optional, time window for rate limiting
+MCP_SERVER_TIMEOUT=30  # Optional, timeout for MCP server requests
+MCP_SERVER_RETRY_ATTEMPTS=3  # Optional, number of retry attempts for MCP servers
+WORKSPACE_ROOT=.  # Optional, root directory for file operations
 ```
 
 ## Usage
@@ -119,6 +133,7 @@ codeius
 - `/exit` - Exit the application
 - `/help` - Show help information
 - `/clear` - Clear the conversation history
+- `/analyze [file_path]` - Analyze code file for quality, security, and style issues
 - And many more specialized tools for coding tasks
 
 ### Example Usage
@@ -150,15 +165,23 @@ pip install uv
 
 ## Architecture
 
-The agent follows a modular architecture:
+The agent follows a modular, service-oriented architecture:
 
-- `agent.py` - Main agent logic and orchestration
-- `cli.py` - Command-line interface
-- `file_ops.py` - File system operations
+- `agent.py` - Main agent class that orchestrates other services
+- `model_manager.py` - Handles model switching and LLM interactions
+- `conversation_manager.py` - Manages conversation history and context
+- `action_executor.py` - Executes actions requested by the AI
+- `cli.py` - Command-line interface with enhanced visuals
+- `file_ops.py` - Secure file system operations with validation
 - `git_ops.py` - Git operations
 - `dashboard.py` - Code quality dashboard
 - `history_manager.py` - Conversation history management
 - `mcp_manager.py` - MCP server management
+- `config.py` - Configuration management system
+- `logger.py` - Comprehensive logging system
+- `error_handler.py` - Standardized error handling
+- `performance.py` - Caching and performance optimizations
+- `code_analyzer.py` - Code quality analysis and suggestions
 - `provider/` - LLM provider implementations
   - `groq.py` - Groq API integration
   - `google.py` - Google API integration
@@ -171,6 +194,27 @@ The agent follows a modular architecture:
   - `doc_search_server.py` - Documentation search
   - `db_server.py` - Database queries
 
+## Security Features
+
+Codeius implements multiple security layers:
+- Path traversal prevention
+- File type validation
+- Binary file detection
+- Workspace restriction
+- API key validation
+- Rate limiting
+- Plugin sandboxing
+- Input sanitization
+
+## Performance Optimizations
+
+- API response caching
+- Rate limiting
+- Asynchronous operations
+- Memory management
+- Conversation history limiting
+- Efficient file operations
+
 ## Troubleshooting on Windows
 
 If you encounter issues on Windows related to terminal compatibility, try running Codeius from Command Prompt (cmd.exe) instead of PowerShell or other terminal emulators.
@@ -181,7 +225,8 @@ If you encounter issues on Windows related to terminal compatibility, try runnin
 2. Create a feature branch
 3. Make your changes
 4. Add tests for new functionality
-5. Submit a pull request
+5. Update documentation as needed
+6. Submit a pull request
 
 ## License
 
