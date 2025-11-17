@@ -1,5 +1,38 @@
 # Codeius AI Coding Agent
 
+## ⚠️ IMPORTANT: API Key Setup Required
+
+Before using Codeius, you need to obtain API keys from:
+- [Groq](https://console.groq.com/keys) - Create an account and generate an API key
+- [Google AI Studio](https://aistudio.google.com/) - Create an account and generate an API key
+
+After getting your keys, set them as environment variables:
+
+**On Linux/MacOS:**
+```bash
+export GROQ_API_KEY=your_groq_api_key
+export GOOGLE_API_KEY=your_google_api_key
+```
+
+**On Windows:**
+```cmd
+set GROQ_API_KEY=your_groq_api_key
+set GOOGLE_API_KEY=your_google_api_key
+```
+
+Or create a `.env` file in your project with:
+```env
+GROQ_API_KEY=your_groq_api_key
+GOOGLE_API_KEY=your_google_api_key
+```
+
+By default, Codeius uses:
+- Groq model: `llama3-70b-8192` (can be changed via `GROQ_API_MODEL`)
+- Google model: `gemini-1.5-flash` (can be changed via `GOOGLE_API_MODEL`)
+- Base URLs are pre-configured in the application
+
+---
+
 Codeius is an advanced AI-powered coding assistant that helps with various programming tasks through a command-line interface. It can read and write files, perform git operations, run tests, search code, execute shell commands, and conduct web searches to assist with coding tasks. With enhanced security, performance, and a beautiful visual interface, Codeius is your intelligent coding companion.
 
 ## Features
