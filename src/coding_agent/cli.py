@@ -497,6 +497,28 @@ def display_welcome_screen():
     ascii_art = pyfiglet.figlet_format("CODEIUS", font="slant")
     console.print(f"[bold #8A2BE2]{ascii_art}[/bold #8A2BE2]")  # Deep purple color
 
+    # Check if API keys are set and show warning if not
+    import os
+    groq_key = os.getenv("GROQ_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
+
+    if not groq_key and not google_key:
+        api_warning = Panel(
+            "[bold #FF4500]⚠️ API KEY SETUP REQUIRED[/bold #FF4500]\n\n"
+            "[white]Please set your API keys in environment variables:[/white]\n"
+            "[#7CFC00]GROQ_API_KEY[/#7CFC00] and [#7CFC00]GOOGLE_API_KEY[/#7CFC00]\n\n"
+            "[white]Get keys from:[/white]\n"
+            "[#00FFFF]• Groq: https://console.groq.com/keys[/#00FFFF]\n"
+            "[#00FFFF]• Google: https://aistudio.google.com/app/apikey[/#00FFFF]\n\n"
+            "[bold #BA55D3]Run: export GROQ_API_KEY=your_key (Linux/MacOS)[/bold #BA55D3]\n"
+            "[bold #BA55D3]Run: set GROQ_API_KEY=your_key (Windows)[/bold #BA55D3]",
+            title="[bold #FF4500]API Setup Required[/bold #FF4500]",
+            border_style="#FF4500",
+            expand=False
+        )
+        console.print(api_warning)
+        console.print()  # Extra spacing
+
     # Create a welcome table with project information
     welcome_table = Table(
         title="[bold #9370DB on #00008B]Welcome to Codeius AI Coding Agent[/bold #9370DB on #00008B]",
