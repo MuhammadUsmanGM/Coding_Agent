@@ -520,7 +520,7 @@ def create_plugin(agent, name):
             name=name,
             description=f"Custom plugin for {name}",
             author="User",
-            version="1.0.0"
+            version="1.0.2"
         )
         console.print(f"[bold green]Plugin '{name}' created successfully![/bold green]")
         console.print(f"Location: {plugin_path}")
@@ -793,7 +793,7 @@ def display_welcome_screen():
 
     # Create a cleaner status panel
     status_panel = Panel(
-        "[bold #00FFFF]Status:[/bold #00FFFF] [green]All systems operational[/green]  [bold #00FFFF]Version:[/bold #00FFFF] [magenta]1.0.0[/magenta]  [bold #00FFFF]Uptime:[/bold #00FFFF] [cyan]Ready for use[/cyan]\n\n"
+        "[bold #00FFFF]Status:[/bold #00FFFF] [green]All systems operational[/green]  [bold #00FFFF]Version:[/bold #00FFFF] [magenta]1.0.2[/magenta]  [bold #00FFFF]Uptime:[/bold #00FFFF] [cyan]Ready for use[/cyan]\n\n"
         "[bold #7CFC00]How to use:[/bold #7CFC00] Type coding instructions, confirm file operations, [bold]exit[/bold] to quit, or use [bold #00FFFF]/commands[/bold #00FFFF]",
         title="[bold #40E0D0]System Status[/bold #40E0D0]",
         border_style="#40E0D0",
