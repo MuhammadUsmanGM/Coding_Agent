@@ -42,9 +42,11 @@ Codeius is an advanced AI-powered coding assistant that helps with various progr
 - **Web Search**: Perform real-time web searches via DuckDuckGo MCP server (no API key required)
 - **Multiple LLM Providers**: Uses both Groq and Google AI models with automatic failover
 - **Model Switching**: Switch between available models using `/models` and `/switch` commands
+- **Custom Model Support**: Add your own AI models with `/add_model` command and custom API endpoints
 - **Rich CLI Interface**: Beautiful, user-friendly command-line interface with stunning visuals
 - **Code Search & Navigation**: Find functions, classes, and TODOs in your project
-- **Shell Commands**: Execute safe shell commands within the project
+- **Secure Shell Commands**: Execute safe shell commands directly with `/shell` command
+- **Keyboard Shortcuts**: Enhanced navigation with special key combinations
 - **Automated Testing**: Run pytest tests directly from the agent
 - **Documentation Search**: Find information in local documentation files
 - **Database Access**: Query local SQLite databases safely
@@ -159,6 +161,11 @@ codeius
 
 - `/models` - List available AI models
 - `/mcp` - List available MCP servers
+- `/add_model` - Add a custom AI model with API key and endpoint
+- `/shell [command]` - Execute a direct shell command securely
+- `/toggle` - Toggle between Interaction and Shell modes
+- `/mode` - Alternative command to toggle between modes
+- `/keys` or `/shortcuts` - Show mode switching options
 - `/themes` - Show available visual themes
 - `/cls` or `/clear_screen` - Clear the screen and refresh the interface
 - `/dashboard` - Show real-time code quality dashboard
@@ -175,6 +182,44 @@ codeius
 ⌨️ Enter your query: Write a Python function to calculate factorial
 🤖 Codeius Agent: [Response from the AI]
 ```
+
+### New Features
+
+#### Custom Model Support (`/add_model`)
+The agent now supports adding custom AI models from any OpenAI-compatible API endpoint:
+1. Run `/add_model` command
+2. Enter the model name for identification
+3. Provide your API key (securely stored)
+4. Enter the base URL (e.g., `https://api.openai.com/v1`)
+5. Enter the model ID (e.g., `gpt-4`, `claude-3-opus`, or custom model identifier)
+6. The model will be available in `/models` and can be switched to with `/switch`
+
+This allows you to connect to various providers like OpenAI, Anthropic, Azure OpenAI, or custom APIs.
+
+#### Secure Shell Command Execution (`/shell`)
+Execute shell commands directly from the agent with security features:
+- Run `/shell [command]` to execute any shell command securely
+- Built-in security checks prevent dangerous operations (e.g., rm -rf, format, etc.)
+- Command output is properly captured and displayed
+
+#### Enhanced Mode Switching
+- **Command Method**: Use `/toggle` or `/mode` command to switch between modes
+- **Keyboard Shortcut**: Shift+! (Shift+Exclamation) is conceptually intended for mode switching (use `/toggle` command as primary method)
+
+#### Visual Appearance Changes
+- **Interaction Mode**: Traditional blue-themed prompt (`⌨️ Enter your query:`)
+- **Shell Mode**: Orange-themed prompt with shell icon (`🐚 Shell Mode:`)
+- **Visual Feedback**: Clear visual indicators when switching between modes
+
+### Security Features
+The agent includes multiple security layers:
+- Path traversal prevention
+- File type validation
+- Binary file detection
+- Workspace restriction
+- API key validation
+- Command execution safety (shell command blocking)
+- Input sanitization
 
 ## Using with uvx
 
@@ -202,6 +247,7 @@ The agent follows a modular, service-oriented architecture:
 
 - `agent.py` - Main agent class that orchestrates other services
 - `model_manager.py` - Handles model switching and LLM interactions
+- `custom_model_manager.py` - Manages user-defined custom models
 - `conversation_manager.py` - Manages conversation history and context
 - `action_executor.py` - Executes actions requested by the AI
 - `cli.py` - Command-line interface with enhanced visuals
@@ -219,6 +265,7 @@ The agent follows a modular, service-oriented architecture:
   - `groq.py` - Groq API integration
   - `google.py` - Google API integration
   - `mcp.py` - MCP server integration
+  - `custom.py` - Custom model provider integration
   - `multiprovider.py` - Logic for switching between providers
 - Server scripts:
   - `code_search_server.py` - Code search functionality
