@@ -341,14 +341,62 @@ def package_inspect_task(agent, package_name):
         if hasattr(provider, 'server_name') and provider.server_name == 'package_inspector':
             inspector_provider = provider
             break
-    
+
     if not inspector_provider:
         console.print("[bold red]Error: Package inspector server not available.[/bold red]")
         return
-    
+
     console.print(f"[bold yellow]Inspecting package: {package_name}[/bold yellow]")
     console.print("[bold]This would send the request to the package inspector server...[/bold]")
     console.print("[dim]In a real implementation, the server would return detailed package information including dependencies, licenses, and vulnerabilities.[/dim]")
+
+
+def execute_shell_command_safe(command):
+    """Execute shell commands with security checks"""
+    if not command.strip():
+        return False
+
+    # Security checks for dangerous commands
+    dangerous_patterns = [
+        'rm -rf', 'rm -r', 'rmdir', 'del /s', 'format', 'fdisk',
+        'mkfs', 'dd if=', '>/dev/', '>/etc/',
+        'cat > /etc/', 'echo > /etc/', 'chmod 777 /',
+        'mv /etc/', 'cp /etc/', 'touch /etc/',
+        'shutdown', 'reboot', 'poweroff', 'halt'
+    ]
+
+    cmd_lower = command.lower()
+    for pattern in dangerous_patterns:
+        if pattern in cmd_lower:
+            console.print(f"[bold red]❌ Blocked potentially dangerous command: {command}[/bold red]")
+            return False
+
+    try:
+        # Execute the command and capture output
+        console.print(f"[bold cyan]Executing: {command}[/bold cyan]")
+
+        import subprocess
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=30  # Set a timeout
+        )
+
+        if result.stdout:
+            console.print(f"[white]{result.stdout}[/white]")
+        if result.stderr:
+            console.print(f"[bold red]{result.stderr}[/bold red]")
+
+        console.print(f"[bold green]Command completed with exit code: {result.returncode}[/bold green]")
+        return True
+    except subprocess.TimeoutExpired:
+        console.print("[bold red]Command timed out after 30 seconds[/bold red]")
+        return False
+    except Exception as e:
+        console.print(f"[bold red]Error executing command: {str(e)}[/bold red]")
+        return False
 
 def self_document_task(agent, doc_type, *args):
     """Handle self-documenting tasks for updating documentation"""
@@ -389,11 +437,11 @@ def automation_task(agent, task_type, *args):
         if hasattr(provider, 'server_name') and provider.server_name == 'automation':
             automation_provider = provider
             break
-    
+
     if not automation_provider:
         console.print("[bold red]Error: Automation server not available.[/bold red]")
         return
-    
+
     if task_type == 'scaffold':
         if len(args) < 1:
             console.print("[bold red]Please specify a project name. Usage: /scaffold [project_name] ([template])[/bold red]")
@@ -403,12 +451,12 @@ def automation_task(agent, task_type, *args):
         console.print(f"[bold yellow]Creating project scaffold: {project_name} (template: {template})[/bold yellow]")
         console.print("[bold]This would send the request to the automation server...[/bold]")
         console.print("[dim]In a real implementation, the server would create the project structure.[/dim]")
-    
+
     elif task_type == 'env':
         console.print(f"[bold yellow]Managing environment variables: {args}[/bold yellow]")
         console.print("[bold]This would send the request to the automation server...[/bold]")
         console.print("[dim]In a real implementation, the server would manage .env files.[/dim]")
-    
+
     elif task_type == 'rename':
         if len(args) < 2:
             console.print("[bold red]Please specify old and new names. Usage: /rename [old_name] [new_name] ([file_path])[/bold red]")
@@ -419,7 +467,14 @@ def automation_task(agent, task_type, *args):
         console.print(f"[bold yellow]Renaming variable: {old_name} → {new_name} in {file_path}[/bold yellow]")
         console.print("[bold]This would send the request to the automation server...[/bold]")
         console.print("[dim]In a real implementation, the server would rename variables in the file.[/dim]")
-    
+
+    elif task_type == 'shell':
+        if len(args) < 1:
+            console.print("[bold red]Please specify a command to execute. Usage: /shell [command][/bold red]")
+            return
+        command = ' '.join(args)
+        execute_shell_command_safe(command)
+
     else:
         console.print(f"[bold red]Unknown automation task: {task_type}[/bold red]")
 
@@ -493,6 +548,11 @@ def display_help():
         ("/dashboard", "Show real-time code quality dashboard"),
         ("/themes", "Show available visual themes"),
         ("/add_model", "Add a custom AI model with API key and endpoint"),
+        ("/shell [command]", "Execute a direct shell command securely"),
+        ("/toggle", "Toggle between Interaction and Shell modes"),
+        ("/mode", "Alternative command for toggling modes"),
+        ("/keys", "Show mode switching options"),
+        ("/shortcuts", "Show mode switching options"),
         ("/ocr [image_path]", "Extract text from an image using OCR"),
         ("/refactor [file_path]", "Analyze and refactor code in a file"),
         ("/diff [file1] [file2]", "Compare two files or directories"),
@@ -572,6 +632,9 @@ def display_help():
     tips_table.add_column("Tip", style="#8A2BE2")
     tips_table.add_row("Use [bold #00FFFF]/models[/bold #00FFFF] to see available AI models")
     tips_table.add_row("Use [bold #00FFFF]/switch model_name[/bold #00FFFF] to change models mid-conversation")
+    tips_table.add_row("Use [bold #00FFFF]/shell [command][/bold #00FFFF] to execute secure shell commands")
+    tips_table.add_row("Use [bold #00FFFF]/toggle[/bold #00FFFF] to switch between Interaction and Shell modes")
+    tips_table.add_row("Use [bold #00FFFF]/mode[/bold #00FFFF] as an alternative to /toggle command")
     tips_table.add_row("Type [bold #00FFFF]exit[/bold #00FFFF] to quit anytime")
     tips_table.add_row("Use [bold #00FFFF]/clear[/bold #00FFFF] to reset conversation history")
 
@@ -865,7 +928,7 @@ class CustomCompleter(Completer):
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/shell', '/toggle', '/mode', '/keys', '/shortcuts', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -887,44 +950,58 @@ def main():
 
     agent = CodingAgent()
 
+    # Track the current mode (interaction or shell) - using a mutable container to allow updates
+    mode_container = {'interaction': True}
+
     # Create a custom completer that handles both commands and model suggestions
     completer = CustomCompleter(agent)
 
-    # Create a prompt session with enhanced styling and custom completion
-    style = Style.from_dict({
-        'prompt': 'bold #00FFFF',
-        'completion-menu': 'bg:#262626 #ffffff',
-        'completion-menu.completion.current': 'bg:#4a4a4a #ffffff',
-        'completion-menu.meta.completion': 'bg:#262626 #ffffff',
-        'completion-menu.meta.completion.current': 'bg:#4a4a4a #ffffff',
-    })
-
-    session = PromptSession(
-        completer=completer,
-        style=style,
-        complete_while_typing=True,
-    )
-
     while True:
         try:
+            # Create a prompt session with enhanced styling and custom completion based on current mode
+            def get_current_style():
+                if mode_container['interaction']:
+                    # Standard interaction mode style
+                    return Style.from_dict({
+                        'prompt': 'bold #00FFFF',
+                        'completion-menu': 'bg:#262626 #ffffff',
+                        'completion-menu.completion.current': 'bg:#4a4a4a #ffffff',
+                        'completion-menu.meta.completion': 'bg:#262626 #ffffff',
+                        'completion-menu.meta.completion.current': 'bg:#4a4a4a #ffffff',
+                    })
+                else:
+                    # Shell mode style - different colors
+                    return Style.from_dict({
+                        'prompt': 'bold #FF4500',  # Orange color for shell mode
+                        'completion-menu': 'bg:#4a4a4a #ffffff',
+                        'completion-menu.completion.current': 'bg:#262626 #ffffff',
+                        'completion-menu.meta.completion': 'bg:#4a4a4a #ffffff',
+                        'completion-menu.meta.completion.current': 'bg:#262626 #ffffff',
+                    })
+
+            def get_current_prompt_text():
+                if mode_container['interaction']:
+                    return HTML('<style fg="#00FFFF" bg="black"><b>⌨️ Enter your query:</b> </style> ')
+                else:
+                    return HTML('<style fg="#FF4500" bg="black"><b>🐚 Shell Mode:</b> </style> ')
+
+            # Create session with updated style
+            session = PromptSession(
+                completer=completer,
+                style=get_current_style(),
+                complete_while_typing=True,
+            )
+
             # Styled prompt with enhanced visual indicator and auto-completion
-            prompt_text = HTML('<style fg="#00FFFF" bg="black"><b>⌨️ Enter your query:</b> </style> ')
             prompt = session.prompt(
-                prompt_text,
+                get_current_prompt_text(),
                 default='',
                 complete_style=CompleteStyle.MULTI_COLUMN,
-                style=Style.from_dict({
-                    'prompt': 'bold #00FFFF',
-                    'text': 'white',
-                    'completion-menu': 'bg:#262626 #ffffff',
-                    'completion-menu.completion.current': 'bg:#4a4a4a #ffffff',
-                    'completion-menu.meta.completion': 'bg:#262626 #ffffff',
-                    'completion-menu.meta.completion.current': 'bg:#4a4a4a #ffffff',
-                })
+                style=get_current_style()
             ).strip()
 
             if not prompt: continue
-            
+
             # Handle special commands
             if prompt.startswith('/'):
                 if prompt.lower() == '/models':
@@ -981,6 +1058,17 @@ def main():
                     parts = prompt.split(' ')
                     args = [part.strip() for part in parts[1:] if part.strip()]
                     automation_task(agent, 'scaffold', *args)
+                    continue
+                elif prompt.lower() == '/shell':
+                    console.print("[bold red]Please specify a command to execute. Usage: /shell [command][/bold red]")
+                    continue
+                elif prompt.lower().startswith('/shell '):
+                    parts = prompt.split(' ', 1)  # Split into at most 2 parts: '/shell' and 'command'
+                    if len(parts) > 1:
+                        command = parts[1].strip()
+                        execute_shell_command_safe(command)
+                    else:
+                        console.print("[bold red]Please specify a command to execute. Usage: /shell [command][/bold red]")
                     continue
                 elif prompt.lower().startswith('/env '):
                     parts = prompt.split(' ')
@@ -1060,6 +1148,14 @@ def main():
                 elif prompt.lower() == '/add_model' or prompt.lower() == '/addmodel':
                     add_custom_model(agent)
                     continue
+                elif prompt.lower() == '/toggle' or prompt.lower() == '/mode':
+                    # Toggle between interaction and shell modes
+                    mode_container['interaction'] = not mode_container['interaction']
+                    if mode_container['interaction']:
+                        console.print("[bold green]Mode: Interaction Mode - AI Agent Ready[/bold green]")
+                    else:
+                        console.print("[bold yellow]Mode: Shell Mode - Direct Command Execution[/bold yellow]")
+                    continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
                     if len(parts) > 1:
@@ -1081,6 +1177,13 @@ def main():
                     # Clear the entire screen with a visual effect
                     console.clear()
                     display_welcome_screen()
+                    continue
+                elif prompt.lower() == '/keys' or prompt.lower() == '/shortcuts':
+                    console.print("\n[bold #9370DB]Mode Switching Options:[/bold #9370DB]")
+                    console.print("  [bold]/toggle[/bold]: Command to toggle between Interaction and Shell modes")
+                    console.print("  [bold]Shift+![/bold]: Conceptual keyboard shortcut for mode switching")
+                    console.print("  [dim]Use /toggle command as the primary method for switching modes[/dim]")
+                    console.print()
                     continue
                 elif prompt.lower() == '/exit':
                     # Allow user to exit using /exit command
@@ -1109,7 +1212,7 @@ def main():
                     continue
                 else:
                     console.print(f"[bold red]Unknown command: {prompt}[/bold red]")
-                    console.print("[bold yellow]Available commands: /models, /mcp, /themes, /create_project, /cls, /dashboard, /switch [model_key], /help, /clear, /exit[/bold yellow]")
+                    console.print("[bold yellow]Available commands: Use /help to see full list of available commands[/bold yellow]")
                     continue
 
             if prompt.lower() == "exit":
@@ -1132,6 +1235,12 @@ def main():
                 console.print("\n", goodbye_table)
                 time.sleep(1)  # Brief pause to enjoy the goodbye message
                 break
+
+            # Handle shell mode: if in shell mode, execute prompt as shell command
+            if not mode_container['interaction'] and not prompt.startswith('/'):
+                execute_shell_command_safe(prompt)
+                continue
+
             # Show loading animation while waiting for agent response
             console.print(f"[bold #00FFFF]Processing query...[/bold #00FFFF]")
             import threading
