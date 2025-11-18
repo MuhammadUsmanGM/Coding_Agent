@@ -25,6 +25,7 @@ from coding_agent.security_cli import (
     run_vulnerability_scan,
     run_policy_check
 )
+from coding_agent.visualization_manager import VisualizationManager
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.text import Text
@@ -536,6 +537,72 @@ def display_themes():
     console.print("  [cyan]terminal[/cyan] - Classic terminal look with green accents\n")
     console.print("[bold]To change theme, modify the colors in the CLI code directly.[/bold]\n")
 
+def generate_project_visualizations():
+    """Generate all project visualizations"""
+    console.print("[bold blue]🎨 Generating project visualizations...[/bold blue]")
+    try:
+        visualization_manager = VisualizationManager()
+        results = []
+
+        # Generate dependency graph
+        result = visualization_manager.generate_dependency_graph()
+        results.append(result)
+
+        # Generate project structure
+        result = visualization_manager.generate_project_structure()
+        results.append(result)
+
+        # Generate performance dashboard
+        result = visualization_manager.generate_performance_dashboard()
+        results.append(result)
+
+        console.print("[bold green]✅ All visualizations generated successfully![/bold green]")
+        for result in results:
+            console.print(f"  - {result}")
+    except Exception as e:
+        console.print(f"[bold red]Error generating visualizations: {str(e)}[/bold red]")
+
+def show_dependency_graph():
+    """Show dependency graph visualization"""
+    console.print("[bold blue]🔗 Generating dependency graph...[/bold blue]")
+    try:
+        visualization_manager = VisualizationManager()
+        result = visualization_manager.generate_dependency_graph()
+        console.print(f"[bold green]✅ {result}[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Error generating dependency graph: {str(e)}[/bold red]")
+
+def show_project_structure():
+    """Show project structure visualization"""
+    console.print("[bold blue]📁 Generating project structure visualization...[/bold blue]")
+    try:
+        visualization_manager = VisualizationManager()
+        result = visualization_manager.generate_project_structure()
+        console.print(f"[bold green]✅ {result}[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Error generating project structure visualization: {str(e)}[/bold red]")
+
+def show_performance_dashboard():
+    """Show performance metrics dashboard"""
+    console.print("[bold blue]📊 Generating performance dashboard...[/bold blue]")
+    try:
+        visualization_manager = VisualizationManager()
+        result = visualization_manager.generate_performance_dashboard()
+        console.print(f"[bold green]✅ {result}[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Error generating performance dashboard: {str(e)}[/bold red]")
+
+def show_analysis_summary():
+    """Show analysis summary dashboard"""
+    console.print("[bold blue]🔮 Generating analysis summary...[/bold blue]")
+    try:
+        visualization_manager = VisualizationManager()
+        # For now, this is the same as performance dashboard
+        result = visualization_manager.generate_performance_dashboard()
+        console.print(f"[bold green]✅ {result}[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Error generating analysis summary: {str(e)}[/bold red]")
+
 def display_help():
     """Display help information with all available commands"""
     # Create a visually stunning header for the help
@@ -601,6 +668,11 @@ def display_help():
         ("/plugins", "List available plugins"),
         ("/create_plugin [name]", "Create a new plugin skeleton"),
         ("/switch [model_key]", "Switch to a specific model"),
+        ("/gen_viz", "Generate all project visualizations"),
+        ("/dep_graph", "Show dependency graph visualization"),
+        ("/proj_struct", "Show project structure visualization"),
+        ("/perf_dash", "Show performance metrics dashboard"),
+        ("/viz_summary", "Show analysis summary dashboard"),
         ("/help", "Show this help message"),
         ("/clear", "Clear the conversation history"),
         ("/exit", "Exit the application")
@@ -1265,6 +1337,21 @@ def main():
                         update_security_policy(key.strip(), value.strip())
                     else:
                         console.print("[bold red]Usage: /set_policy [setting_key] [value][/bold red]")
+                    continue
+                elif prompt.lower() == '/gen_viz' or prompt.lower() == '/visualize':
+                    generate_project_visualizations()
+                    continue
+                elif prompt.lower() == '/dep_graph':
+                    show_dependency_graph()
+                    continue
+                elif prompt.lower() == '/proj_struct':
+                    show_project_structure()
+                    continue
+                elif prompt.lower() == '/perf_dash':
+                    show_performance_dashboard()
+                    continue
+                elif prompt.lower() == '/viz_summary':
+                    show_analysis_summary()
                     continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
