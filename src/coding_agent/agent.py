@@ -11,6 +11,7 @@ from coding_agent.provider.mcp import MCPProvider
 from coding_agent.custom_model_manager import custom_model_manager
 from coding_agent.context_manager import ContextManager
 from coding_agent.security_manager import SecurityScanner, security_scanner, security_policy_manager
+from coding_agent.visualization_manager import VisualizationManager
 from dotenv import load_dotenv
 import time
 import os
@@ -29,6 +30,7 @@ class CodingAgent:
         self.context_manager = ContextManager()
         self.security_scanner = security_scanner
         self.security_policy_manager = security_policy_manager
+        self.visualization_manager = VisualizationManager(".")
 
         # Load user plugins
         self.plugin_manager.load_plugins()
