@@ -47,6 +47,7 @@ Codeius is an advanced AI-powered coding assistant that helps with various progr
 - **Code Search & Navigation**: Find functions, classes, and TODOs in your project
 - **Secure Shell Commands**: Execute safe shell commands directly with `/shell` command
 - **Context Management**: Advanced project context tracking with semantic code search and cross-reference features
+- **Advanced Security**: Built-in vulnerability scanning, secrets detection, and policy enforcement
 - **Keyboard Shortcuts**: Enhanced navigation with special key combinations
 - **Automated Testing**: Run pytest tests directly from the agent
 - **Documentation Search**: Find information in local documentation files
@@ -173,6 +174,13 @@ codeius
 - `/find_class [name]` - Find a class by name
 - `/file_context [file_path]` - Show context for a specific file
 - `/autodetect` - Auto-detect and set project context
+- `/security_scan` - Run comprehensive security scan
+- `/secrets_scan` - Scan for secrets and sensitive information
+- `/vuln_scan` - Scan for code vulnerabilities
+- `/policy_check` - Check for policy violations
+- `/security_policy` - Show current security policy settings
+- `/security_report` - Generate comprehensive security report
+- `/set_policy [key] [value]` - Update security policy settings
 - `/keys` or `/shortcuts` - Show mode switching options
 - `/themes` - Show available visual themes
 - `/cls` or `/clear_screen` - Clear the screen and refresh the interface

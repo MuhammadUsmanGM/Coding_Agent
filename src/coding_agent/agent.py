@@ -10,6 +10,7 @@ from coding_agent.logger import agent_logger
 from coding_agent.provider.mcp import MCPProvider
 from coding_agent.custom_model_manager import custom_model_manager
 from coding_agent.context_manager import ContextManager
+from coding_agent.security_manager import SecurityScanner, security_scanner, security_policy_manager
 from dotenv import load_dotenv
 import time
 import os
@@ -26,6 +27,8 @@ class CodingAgent:
         self.action_executor = ActionExecutor()
         self.plugin_manager = plugin_manager
         self.context_manager = ContextManager()
+        self.security_scanner = security_scanner
+        self.security_policy_manager = security_policy_manager
 
         # Load user plugins
         self.plugin_manager.load_plugins()

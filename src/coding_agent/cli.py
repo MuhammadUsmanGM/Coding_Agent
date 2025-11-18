@@ -16,6 +16,15 @@ from coding_agent.context_cli import (
     find_element_command,
     auto_detect_project_command
 )
+from coding_agent.security_cli import (
+    run_security_scan,
+    show_security_policy,
+    update_security_policy,
+    create_security_report,
+    run_secrets_detection,
+    run_vulnerability_scan,
+    run_policy_check
+)
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.text import Text
@@ -582,6 +591,13 @@ def display_help():
         ("/find_class [name]", "Find a class by name"),
         ("/file_context [file_path]", "Show context for a specific file"),
         ("/autodetect", "Auto-detect and set project context"),
+        ("/security_scan", "Run comprehensive security scan"),
+        ("/secrets_scan", "Scan for secrets and sensitive information"),
+        ("/vuln_scan", "Scan for code vulnerabilities"),
+        ("/policy_check", "Check for policy violations"),
+        ("/security_policy", "Show current security policy settings"),
+        ("/security_report", "Generate comprehensive security report"),
+        ("/set_policy [key] [value]", "Update security policy setting"),
         ("/plugins", "List available plugins"),
         ("/create_plugin [name]", "Create a new plugin skeleton"),
         ("/switch [model_key]", "Switch to a specific model"),
@@ -654,6 +670,8 @@ def display_help():
     tips_table.add_row("Use [bold #00FFFF]/context[/bold #00FFFF] to see project context information")
     tips_table.add_row("Use [bold #00FFFF]/search [query][/bold #00FFFF] for semantic code search")
     tips_table.add_row("Use [bold #00FFFF]/autodetect[/bold #00FFFF] to automatically set project context")
+    tips_table.add_row("Use [bold #00FFFF]/security_scan[/bold #00FFFF] to run comprehensive security scan")
+    tips_table.add_row("Use [bold #00FFFF]/secrets_scan[/bold #00FFFF] to detect sensitive information")
     tips_table.add_row("Type [bold #00FFFF]exit[/bold #00FFFF] to quit anytime")
     tips_table.add_row("Use [bold #00FFFF]/clear[/bold #00FFFF] to reset conversation history")
 
@@ -947,7 +965,7 @@ class CustomCompleter(Completer):
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/shell', '/toggle', '/mode', '/keys', '/shortcuts', '/context', '/ctx', '/set_project', '/search', '/find_function', '/find_class', '/file_context', '/autodetect', '/detect', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/shell', '/toggle', '/mode', '/keys', '/shortcuts', '/context', '/ctx', '/set_project', '/search', '/find_function', '/find_class', '/file_context', '/autodetect', '/detect', '/security_scan', '/scan', '/secrets_scan', '/vuln_scan', '/policy_check', '/security_policy', '/policy', '/security_report', '/set_policy', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -1221,6 +1239,32 @@ def main():
                         show_file_context(agent.context_manager, file_path)
                     else:
                         console.print("[bold red]Please specify a file path. Usage: /file_context [file_path][/bold red]")
+                    continue
+                elif prompt.lower() == '/security_scan' or prompt.lower() == '/scan':
+                    run_security_scan()
+                    continue
+                elif prompt.lower() == '/secrets_scan':
+                    run_secrets_detection()
+                    continue
+                elif prompt.lower() == '/vuln_scan':
+                    run_vulnerability_scan()
+                    continue
+                elif prompt.lower() == '/policy_check':
+                    run_policy_check()
+                    continue
+                elif prompt.lower() == '/security_policy' or prompt.lower() == '/policy':
+                    show_security_policy()
+                    continue
+                elif prompt.lower() == '/security_report':
+                    create_security_report()
+                    continue
+                elif prompt.lower().startswith('/set_policy '):
+                    parts = prompt.split(' ', 2)  # Split into command, key, value
+                    if len(parts) == 3:
+                        _, key, value = parts
+                        update_security_policy(key.strip(), value.strip())
+                    else:
+                        console.print("[bold red]Usage: /set_policy [setting_key] [value][/bold red]")
                     continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
