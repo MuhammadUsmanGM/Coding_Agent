@@ -28,7 +28,7 @@ def create_nodejs_project(project_name: str):
     with open(project_path / "package.json", "w") as f:
         f.write(f'''{{
   "name": "{project_name.lower().replace(' ', '-')}",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A Node.js/Express project generated with Codeius AI",
   "main": "src/server.js",
   "scripts": {{
