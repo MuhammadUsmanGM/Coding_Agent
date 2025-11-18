@@ -67,9 +67,9 @@ def display_dashboard():
     
     # Additional explanation
     console.print("\n[bold]Dashboard Legend:[/bold]")
-    console.print("  ✅ Good - Metric is in healthy range")
-    console.print("  ⚠️  Warning - Metric could be improved")
-    console.print("  ❌ Poor - Metric needs attention\n")
+    console.print("  [GOOD] Good - Metric is in healthy range")
+    console.print("  [WARN] Warning - Metric could be improved")
+    console.print("  [BAD] Poor - Metric needs attention\n")
 
 def ocr_image(agent, image_path):
     """Process an image using OCR to extract text"""
@@ -279,14 +279,59 @@ def schedule_task(agent, task_type, interval, target=None):
         if hasattr(provider, 'server_name') and provider.server_name == 'task_scheduler':
             scheduler_provider = provider
             break
-    
+
     if not scheduler_provider:
         console.print("[bold red]Error: Task scheduler server not available.[/bold red]")
         return
-    
+
     console.print(f"[bold yellow]Scheduling task: {task_type} every {interval}{' for ' + target if target else ''}[/bold yellow]")
     console.print("[bold]This would send the request to the task scheduler server...[/bold]")
     console.print("[dim]In a real implementation, the server would schedule the task to run automatically.[/dim]")
+
+def add_custom_model(agent):
+    """Handle adding a custom model with user input"""
+    console.print("[bold #00FFFF]Adding Custom Model[/bold #00FFFF]")
+    console.print("[white]Please provide the following information for your custom model:[/white]")
+
+    try:
+        # Get model name
+        model_name = Prompt.ask("[bold #7CFC00]Model Name[/bold #7CFC00] (for identification)").strip()
+        if not model_name:
+            console.print("[bold red]Model name is required. Operation cancelled.[/bold red]")
+            return
+
+        # Get API key
+        api_key = Prompt.ask("[bold #7CFC00]API Key[/bold #7CFC00]", password=True).strip()
+        if not api_key:
+            console.print("[bold red]API key is required. Operation cancelled.[/bold red]")
+            return
+
+        # Get base URL
+        base_url = Prompt.ask("[bold #7CFC00]Base URL[/bold #7CFC00] (e.g., https://api.openai.com/v1)").strip()
+        if not base_url:
+            console.print("[bold red]Base URL is required. Operation cancelled.[/bold red]")
+            return
+
+        # Get model identifier
+        model_id = Prompt.ask("[bold #7CFC00]Model ID[/bold #7CFC00] (e.g., gpt-4, claude-3, etc.)").strip()
+        if not model_id:
+            console.print("[bold red]Model ID is required. Operation cancelled.[/bold red]")
+            return
+
+        # Add the custom model
+        success = agent.add_custom_model(model_name, api_key, base_url, model_id)
+
+        if success:
+            console.print(f"[bold #32CD32][GOOD] Custom model '{model_name}' has been added successfully![/bold #32CD32]")
+            console.print(f"[bold]You can now use this model with: /switch {model_name.lower().replace(' ', '_')}_X[/bold]")
+            console.print(f"[dim]Where X is the provider number shown in /models[/dim]")
+        else:
+            console.print("[bold red][BAD] Failed to add custom model. Please check the provided information.[/bold red]")
+
+    except KeyboardInterrupt:
+        console.print("\n[bold yellow]Operation cancelled by user.[/bold yellow]")
+    except Exception as e:
+        console.print(f"[bold red]Error adding custom model: {str(e)}[/bold red]")
 
 def package_inspect_task(agent, package_name):
     """Handle package inspection tasks"""
@@ -422,7 +467,7 @@ def display_help():
     """Display help information with all available commands"""
     # Create a visually stunning header for the help
     help_header = Panel(
-        "[bold #BA55D3]🌟 Welcome to Codeius AI Coding Agent Help Center 🌟[/bold #BA55D3]\n\n"
+        "[bold #BA55D3]Welcome to Codeius AI Coding Agent Help Center[/bold #BA55D3]\n\n"
         "[white]Use these commands to interact with the agent:[/white]",
         title="[bold #9370DB]Command Guide[/bold #9370DB]",
         border_style="#9370DB",
@@ -438,15 +483,16 @@ def display_help():
         border_style="#40E0D0",
         expand=True
     )
-    commands_table.add_column("🔢 #", style="#7CFC00", justify="center", width=3)
-    commands_table.add_column("✨ Command", style="#7CFC00", width=20)
-    commands_table.add_column("📝 Description", style="white")
+    commands_table.add_column(" #", style="#7CFC00", justify="center", width=3)
+    commands_table.add_column("Command", style="#7CFC00", width=20)
+    commands_table.add_column("Description", style="white")
 
     commands_list = [
         ("/models", "List all available AI models"),
         ("/mcp", "List available MCP tools"),
         ("/dashboard", "Show real-time code quality dashboard"),
         ("/themes", "Show available visual themes"),
+        ("/add_model", "Add a custom AI model with API key and endpoint"),
         ("/ocr [image_path]", "Extract text from an image using OCR"),
         ("/refactor [file_path]", "Analyze and refactor code in a file"),
         ("/diff [file1] [file2]", "Compare two files or directories"),
@@ -475,7 +521,7 @@ def display_help():
 
     # MCP Tools section with enhanced visual
     mcp_header = Panel(
-        "[bold #FFA500]🔧 MCP Tools - Enhanced Functionality 🔧[/bold #FFA500]",
+        "[bold #FFA500]MCP Tools - Enhanced Functionality[/bold #FFA500]",
         border_style="#FFA500",
         expand=False
     )
@@ -520,7 +566,7 @@ def display_help():
     console.print("\n", mcp_table)
 
     # Add a visual separator and tips section
-    console.print(Rule("[bold #8A2BE2]💡 Tips & Tricks 💡[/bold #8A2BE2]", style="#8A2BE2", align="center"))
+    console.print(Rule("[bold #8A2BE2]Tips & Tricks[/bold #8A2BE2]", style="#8A2BE2", align="center"))
 
     tips_table = Table(box=HEAVY_HEAD, border_style="#8A2BE2", expand=True)
     tips_table.add_column("Tip", style="#8A2BE2")
@@ -545,7 +591,7 @@ def display_welcome_screen():
 
     if not groq_key and not google_key:
         api_warning = Panel(
-            "[bold #FF4500]⚠️ API KEY SETUP REQUIRED[/bold #FF4500]\n\n"
+            "[bold #FF4500]API KEY SETUP REQUIRED[/bold #FF4500]\n\n"
             "[white]Please set your API keys in environment variables:[/white]\n"
             "[#7CFC00]GROQ_API_KEY[/#7CFC00] and [#7CFC00]GOOGLE_API_KEY[/#7CFC00]\n\n"
             "[white]Get keys from:[/white]\n"
@@ -655,13 +701,13 @@ def format_agent_response(response_text):
     response_text = re.sub(r'(`[^`]+`)', r'[bold #FFD700]\1[/bold #FFD700]', response_text)
 
     # Format success indicators
-    response_text = re.sub(r'(✅)', r'[bold #32CD32]\1[/bold #32CD32]', response_text)
+    response_text = re.sub(r'(\[GOOD\])', r'[bold #32CD32]\1[/bold #32CD32]', response_text)
 
     # Format error indicators
-    response_text = re.sub(r'(❌)', r'[bold #FF4500]\1[/bold #FF4500]', response_text)
+    response_text = re.sub(r'(\[BAD\])', r'[bold #FF4500]\1[/bold #FF4500]', response_text)
 
     # Format warning indicators
-    response_text = re.sub(r'(⚠️)', r'[bold #FFA500]\1[/bold #FFA500]', response_text)
+    response_text = re.sub(r'(\[WARN\])', r'[bold #FFA500]\1[/bold #FFA500]', response_text)
 
     # Format web search indicators
     response_text = re.sub(r'(🌐)', r'[bold #00FFFF]\1[/bold #00FFFF]', response_text)
@@ -814,12 +860,12 @@ class CustomCompleter(Completer):
                         yield Completion(key, 
                                        display=f"{key} [{info['name']}]",
                                        display_meta=f"{info['provider']}{suffix}")
-            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/exit']:
+            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/add_model', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/exit']:
                 # Don't provide additional completions if these commands are fully typed
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/dashboard', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -1011,6 +1057,9 @@ def main():
                         console.print("[bold red]Please specify task type and interval. Usage: /schedule [task_type] [interval] [target][/bold red]")
                         console.print("[bold]Examples: /schedule 'test' 'every 30 mins'; /schedule 'script' 'daily at 09:00' 'my_script.py'[/bold]")
                         continue
+                elif prompt.lower() == '/add_model' or prompt.lower() == '/addmodel':
+                    add_custom_model(agent)
+                    continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
                     if len(parts) > 1:
@@ -1026,7 +1075,7 @@ def main():
                     continue
                 elif prompt.lower() == '/clear':
                     agent.reset_history()
-                    console.print("[bold #32CD32]✅ Conversation history cleared.[/bold #32CD32]")
+                    console.print("[bold #32CD32][GOOD] Conversation history cleared.[/bold #32CD32]")
                     continue
                 elif prompt.lower() == '/cls' or prompt.lower() == '/clear_screen':
                     # Clear the entire screen with a visual effect
@@ -1038,7 +1087,7 @@ def main():
                     # Display conversation history before exiting
                     console.print(Panel("[bold yellow]Conversation Summary[/bold yellow]", expand=False))
                     display_conversation_history(agent)
-                    console.print("\n[bold #32CD32]👋 Thank you for using Codeius! Goodbye![/bold #32CD32]")
+                    console.print("\n[bold #32CD32]Thank you for using Codeius! Goodbye![/bold #32CD32]")
                     break
                 elif prompt.lower().startswith('/create_project '):
                     # Extract project details from the command
@@ -1084,7 +1133,7 @@ def main():
                 time.sleep(1)  # Brief pause to enjoy the goodbye message
                 break
             # Show loading animation while waiting for agent response
-            console.print(f"[bold #00FFFF]🔍 Processing query...[/bold #00FFFF]")
+            console.print(f"[bold #00FFFF]Processing query...[/bold #00FFFF]")
             import threading
             stop_event = threading.Event()
             loading_thread = threading.Thread(target=show_loading_animation, args=(stop_event,))
@@ -1116,7 +1165,7 @@ def main():
             if result.startswith("**Agent Plan:**"):  # Looks like JSON action plan is parsed
                 if confirm_safe_execution(result):
                     success_panel = Panel(
-                        "[bold #32CD32]✅ Success![/bold #32CD32]\n\n[white]Action(s) executed successfully.[/white]",
+                        "[bold #32CD32]Success![/bold #32CD32]\n\n[white]Action(s) executed successfully.[/white]",
                         border_style="#32CD32",
                         expand=False,
                         padding=(1, 1)
@@ -1125,7 +1174,7 @@ def main():
                     console.print()  # Add blank line
                 else:
                     cancel_panel = Panel(
-                        "[bold #FF4500]❌ Cancelled![/bold #FF4500]\n\n[white]Action(s) were not executed.[/white]",
+                        "[bold #FF4500]Cancelled![/bold #FF4500]\n\n[white]Action(s) were not executed.[/white]",
                         border_style="#FF4500",
                         expand=False,
                         padding=(1, 1)
@@ -1157,7 +1206,7 @@ def main():
                 if show_history in ("y", "yes", ""):
                     display_conversation_history(agent)
         except KeyboardInterrupt:
-            console.print("\n[bold #FF4500]⚠️  Ctrl+C detected – exiting safely...[/bold #FF4500]")
+            console.print("\n[bold #FF4500]Ctrl+C detected – exiting safely...[/bold #FF4500]")
             # Display conversation history before exiting
             console.print(Panel("[bold #FFD700]Conversation Summary[/bold #FFD700]", expand=False, border_style="#FFD700"))
             display_conversation_history(agent)
@@ -1178,7 +1227,7 @@ def main():
             time.sleep(1)  # Brief pause to enjoy the goodbye message
             break
         except Exception as e:
-            console.print(f"[bold red]❌ Error: {e}[/bold red]")
+            console.print(f"[bold red][BAD] Error: {e}[/bold red]")
 
 if __name__ == "__main__":
     main()

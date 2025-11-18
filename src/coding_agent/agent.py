@@ -8,6 +8,7 @@ from coding_agent.plugin_manager import plugin_manager
 from coding_agent.config import config_manager
 from coding_agent.logger import agent_logger
 from coding_agent.provider.mcp import MCPProvider
+from coding_agent.custom_model_manager import custom_model_manager
 from dotenv import load_dotenv
 import time
 import os
@@ -130,3 +131,11 @@ class CodingAgent:
     def reset_history(self) -> None:
         """Reset conversation history."""
         self.conversation_manager.reset_history()
+
+    def add_custom_model(self, name: str, api_key: str, base_url: str, model: str) -> bool:
+        """Add a custom model to the agent"""
+        return self.model_manager.add_custom_model(name, api_key, base_url, model)
+
+    def list_custom_models(self) -> Dict[str, Any]:
+        """List all custom models"""
+        return self.model_manager.list_custom_models()

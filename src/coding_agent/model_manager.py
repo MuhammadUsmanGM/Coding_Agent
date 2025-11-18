@@ -7,7 +7,9 @@ from coding_agent.provider.multiprovider import MultiProvider
 from coding_agent.provider.groq import GroqProvider
 from coding_agent.provider.google import GoogleProvider
 from coding_agent.provider.mcp import MCPProvider
+from coding_agent.provider.custom import CustomProvider
 from coding_agent.mcp_manager import mcp_manager
+from coding_agent.custom_model_manager import custom_model_manager
 
 
 class ModelManager:
@@ -25,6 +27,19 @@ class ModelManager:
         for server in mcp_servers:
             if server.enabled:
                 self.providers.append(MCPProvider(server.name))
+
+        # Add custom providers from user-defined models
+        custom_models = custom_model_manager.list_models()
+        for model_name in custom_models:
+            model_info = custom_model_manager.get_model(model_name)
+            if model_info:
+                custom_provider = CustomProvider(
+                    name=model_name,
+                    api_key=model_info["api_key"],
+                    base_url=model_info["base_url"],
+                    model=model_info["model"]
+                )
+                self.providers.append(custom_provider)
 
         self.llm = MultiProvider(self.providers)
         
@@ -55,7 +70,14 @@ class ModelManager:
                 # Only include non-MCP providers (actual AI models)
                 model_name = getattr(provider, 'model', 'unknown')
                 provider_name = provider_type.__name__.replace('Provider', '')
-                provider_type_str = 'cloud' if provider_name in ['Groq', 'Google'] else 'other'
+
+                # Special handling for custom providers
+                if provider_type.__name__ == 'CustomProvider':
+                    provider_name = getattr(provider, 'name', 'custom')
+                    provider_type_str = 'custom'
+                else:
+                    provider_type_str = 'cloud' if provider_name in ['Groq', 'Google'] else 'other'
+
                 models[f"{provider_name.lower()}_{i}"] = {
                     'name': model_name,
                     'provider': provider_name,
@@ -88,7 +110,13 @@ class ModelManager:
         if model_key in models:
             # Find the provider index corresponding to the model key
             for i, provider in enumerate(self.providers):
-                provider_name = type(provider).__name__.replace('Provider', '')
+                provider_type = type(provider)
+                provider_name = provider_type.__name__.replace('Provider', '')
+
+                # Special handling for custom providers
+                if provider_type.__name__ == 'CustomProvider':
+                    provider_name = getattr(provider, 'name', 'custom')
+
                 current_key = f"{provider_name.lower()}_{i}"
                 if current_key == model_key:
                     # Set the specific provider in the MultiProvider
@@ -99,3 +127,24 @@ class ModelManager:
     def chat(self, messages: list, max_tokens: int = 2048):
         """Call the LLM with the provided messages."""
         return self.llm.chat(messages, max_tokens)
+
+    def add_custom_model(self, name: str, api_key: str, base_url: str, model: str) -> bool:
+        """Add a custom model and initialize its provider"""
+        # Add to custom model manager
+        success = custom_model_manager.add_model(name, api_key, base_url, model)
+
+        if success:
+            # Create and add the provider to our list
+            custom_provider = CustomProvider(
+                name=name,
+                api_key=api_key,
+                base_url=base_url,
+                model=model
+            )
+            self.providers.append(custom_provider)
+
+        return success
+
+    def list_custom_models(self) -> Dict[str, Any]:
+        """Get list of custom models"""
+        return {name: custom_model_manager.get_model(name) for name in custom_model_manager.list_models()}
