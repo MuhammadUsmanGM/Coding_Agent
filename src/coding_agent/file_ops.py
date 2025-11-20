@@ -11,6 +11,7 @@ import mimetypes
 class FileOps:
     def __init__(self, root: str = "."):
         self.config = config_manager.get_agent_config()
+        self.security_config = config_manager.get_security_config()
         self.root = Path(root).resolve()
         # Use configured allowed extensions or default set
         self.allowed_extensions = self.config.allowed_extensions
@@ -28,12 +29,12 @@ class FileOps:
             # Prevent absolute paths
             if path.is_absolute():
                 # If workspace restriction is enabled, reject absolute paths
-                if self.config.restrict_file_operations_to_workspace:
+                if self.security_config.restrict_file_operations_to_workspace:
                     agent_logger.log_security_event("ABSOLUTE_PATH_ATTEMPT", f"Detected absolute path {file_path}")
                     return False, "Absolute paths are not allowed"
 
             # Resolve the full path and ensure it's within the allowed root
-            if self.config.restrict_file_operations_to_workspace:
+            if self.security_config.restrict_file_operations_to_workspace:
                 full_path = (self.root / path).resolve()
                 try:
                     full_path.relative_to(self.root)
@@ -54,7 +55,7 @@ class FileOps:
         """Validate that the file type is allowed for operations."""
         path = Path(file_path)
 
-        if self.config.validate_file_extensions:
+        if self.security_config.validate_file_extensions:
             if path.suffix.lower() not in self.config.allowed_extensions:
                 return False
         return True
@@ -75,7 +76,7 @@ class FileOps:
                     return False
                 except UnicodeDecodeError:
                     return True
-        except:
+        except Exception:
             return True  # If we can't read the file, assume binary
 
     def read_file(self, file_path: str) -> str:
@@ -143,6 +144,61 @@ class FileOps:
             agent_logger.log_file_operation("write", file_path, False, str(e))
             return f"Error writing file '{file_path}': {e}"
 
+    def append_to_file(self, file_path: str, content: str) -> Union[bool, str]:
+        """Append content to an existing file with security checks."""
+        is_valid, result = self._validate_path(file_path)
+        if not is_valid:
+            return f"Error: {result}"
+
+        path = result
+        # Validate file type
+        if not self._validate_file_type(file_path):
+            agent_logger.log_file_operation("append", file_path, False, "File type not allowed")
+            return f"Error: File extension '{path.suffix}' is not allowed for appending"
+
+        # Check if content is binary (has null bytes or non-printable characters)
+        try:
+            content.encode('utf-8')
+        except UnicodeEncodeError:
+            agent_logger.log_file_operation("append", file_path, False, "Content contains invalid characters")
+            return f"Error: Content contains invalid characters"
+
+        try:
+            # Check if file exists before appending
+            if not path.exists():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                # Create the file if it doesn't exist
+                path.write_text(content, encoding="utf-8")
+            else:
+                # Append to existing file
+                with open(path, "a", encoding="utf-8") as f:
+                    f.write(content)
+            agent_logger.log_file_operation("append", file_path, True, f"Appended {len(content)} characters")
+            return True
+        except Exception as e:
+            agent_logger.log_file_operation("append", file_path, False, str(e))
+            return f"Error appending to file '{file_path}': {e}"
+
+    def delete_file(self, file_path: str) -> Union[bool, str]:
+        """Delete a file with security checks."""
+        is_valid, result = self._validate_path(file_path)
+        if not is_valid:
+            return f"Error: {result}"
+
+        path = result
+        # Additional check to prevent deleting non-existent files
+        if not path.exists() or not path.is_file():
+            agent_logger.log_file_operation("delete", file_path, False, "File does not exist or is not a file")
+            return f"Error: File '{file_path}' does not exist or is not a file"
+
+        try:
+            path.unlink()  # Delete the file
+            agent_logger.log_file_operation("delete", file_path, True, "File deleted successfully")
+            return True
+        except Exception as e:
+            agent_logger.log_file_operation("delete", file_path, False, str(e))
+            return f"Error deleting file '{file_path}': {e}"
+
     def list_files(self, pattern: str = "**/*.py") -> list[str]:
         """List files with security checks."""
         # Ensure the pattern is safe and doesn't contain path traversal
@@ -163,3 +219,18 @@ class FileOps:
         except Exception as e:
             agent_logger.log_error("LIST_FILES_ERROR", str(e), pattern)
             return [f"Error listing files with pattern '{pattern}': {e}"]
+
+    def create_directory(self, dir_path: str) -> Union[bool, str]:
+        """Create a directory with security checks."""
+        is_valid, result = self._validate_path(dir_path)
+        if not is_valid:
+            return f"Error: {result}"
+
+        path = result
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            agent_logger.log_file_operation("create_dir", dir_path, True, "Directory created successfully")
+            return True
+        except Exception as e:
+            agent_logger.log_file_operation("create_dir", dir_path, False, str(e))
+            return f"Error creating directory '{dir_path}': {e}"

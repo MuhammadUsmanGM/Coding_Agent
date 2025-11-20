@@ -70,7 +70,7 @@ class ProjectAnalyzer:
                             lang = self._get_language_from_extension(file_path.suffix)
                             if lang:
                                 self.project_info["languages"][lang] = self.project_info["languages"].get(lang, 0) + 1
-                    except:
+                    except Exception:
                         # If we can't read the file, skip line counting
                         pass
         

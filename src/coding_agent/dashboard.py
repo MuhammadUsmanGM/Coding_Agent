@@ -67,7 +67,7 @@ class Dashboard:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         lines = f.readlines()
                         total_lines += len(lines)
-                except:
+                except Exception:
                     continue
             
             # Simplified quality score calculation
