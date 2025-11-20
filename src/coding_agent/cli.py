@@ -26,6 +26,7 @@ from coding_agent.security_cli import (
     run_policy_check
 )
 from coding_agent.visualization_manager import VisualizationManager
+from coding_agent.project_analyzer import analyze_current_project
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.text import Text
@@ -537,6 +538,40 @@ def display_themes():
     console.print("  [cyan]terminal[/cyan] - Classic terminal look with green accents\n")
     console.print("[bold]To change theme, modify the colors in the CLI code directly.[/bold]\n")
 
+def analyze_project_command():
+    """Analyze the current project and provide insights"""
+    console.print("[bold blue]🔍 Starting project analysis...[/bold blue]")
+
+    try:
+        # Show loading animation while analyzing
+        import threading
+        stop_event = threading.Event()
+        loading_thread = threading.Thread(target=show_loading_animation, args=(stop_event,))
+        loading_thread.start()
+
+        # Perform the analysis
+        report = analyze_current_project()
+
+        # Stop the loading animation
+        stop_event.set()
+        loading_thread.join()
+        print()  # Add a newline after the loading message is cleared
+
+        # Display the analysis report
+        from rich.markdown import Markdown
+        md = Markdown(report)
+        console.print(md)
+
+        console.print("\n[bold green]✅ Project analysis complete![/bold green]")
+
+    except Exception as e:
+        # Stop the loading animation in case of error
+        stop_event.set()
+        if 'loading_thread' in locals():
+            loading_thread.join()
+        print()  # Add a newline after the loading message is cleared
+        console.print(f"[bold red]❌ Error during project analysis: {str(e)}[/bold red]")
+
 def generate_project_visualizations():
     """Generate all project visualizations"""
     console.print("[bold blue]🎨 Generating project visualizations...[/bold blue]")
@@ -673,6 +708,7 @@ def display_help():
         ("/proj_struct", "Show project structure visualization"),
         ("/perf_dash", "Show performance metrics dashboard"),
         ("/viz_summary", "Show analysis summary dashboard"),
+        ("/analyze", "Analyze the current project structure and content"),
         ("/help", "Show this help message"),
         ("/clear", "Clear the conversation history"),
         ("/exit", "Exit the application")
@@ -1004,12 +1040,12 @@ class CustomCompleter(Completer):
                         yield Completion(key, 
                                        display=f"{key} [{info['name']}]",
                                        display_meta=f"{info['provider']}{suffix}")
-            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/add_model', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/exit']:
+            elif command in ['/help', '/clear', '/mcp', '/models', '/dashboard', '/add_model', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/analyze', '/exit']:
                 # Don't provide additional completions if these commands are fully typed
                 pass
             else:
                 # Provide command suggestions for commands that don't require parameters
-                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/shell', '/toggle', '/mode', '/keys', '/shortcuts', '/context', '/ctx', '/set_project', '/search', '/find_function', '/find_class', '/file_context', '/autodetect', '/detect', '/security_scan', '/scan', '/secrets_scan', '/vuln_scan', '/policy_check', '/security_policy', '/policy', '/security_report', '/set_policy', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/switch', '/help', '/clear', '/exit']
+                commands = ['/models', '/mcp', '/dashboard', '/add_model', '/shell', '/toggle', '/mode', '/keys', '/shortcuts', '/context', '/ctx', '/set_project', '/search', '/find_function', '/find_class', '/file_context', '/autodetect', '/detect', '/security_scan', '/scan', '/secrets_scan', '/vuln_scan', '/policy_check', '/security_policy', '/policy', '/security_report', '/set_policy', '/ocr', '/refactor', '/diff', '/plugins', '/create_plugin', '/scaffold', '/env', '/rename', '/plot', '/update_docs', '/inspect', '/snippet', '/scrape', '/config', '/schedule', '/analyze', '/switch', '/help', '/clear', '/exit']
                 for cmd in commands:
                     if cmd.startswith(text.lower()):
                         yield Completion(cmd, start_position=-len(text))
@@ -1313,6 +1349,9 @@ def main():
                     continue
                 elif prompt.lower() == '/viz_summary':
                     show_analysis_summary()
+                    continue
+                elif prompt.lower() == '/analyze':
+                    analyze_project_command()
                     continue
                 elif prompt.lower().startswith('/switch '):
                     parts = prompt.split(' ', 1)
