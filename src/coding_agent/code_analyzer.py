@@ -176,7 +176,7 @@ class CodeAnalyzer:
                     "code": result.get("error_code", ""),
                     "severity": "warning"
                 })
-        except:
+        except Exception:
             # If JSON parsing fails, try to parse as text
             for line in output.splitlines():
                 if ':' in line:

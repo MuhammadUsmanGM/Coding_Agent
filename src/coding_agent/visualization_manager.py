@@ -508,9 +508,9 @@ class VisualizationManager:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             lines = f.readlines()
                             project_stats["total_lines"] += len(lines)
-                    except:
+                    except Exception:
                         pass  # Skip if can't read file
-                    
+
                     # Count functions and classes
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
@@ -521,7 +521,7 @@ class VisualizationManager:
                             classes = re.findall(r'^\s*class\s+\w+', content, re.MULTILINE)
                             project_stats["complexity_metrics"]["total_functions"] += len(functions)
                             project_stats["complexity_metrics"]["total_classes"] += len(classes)
-                    except:
+                    except Exception:
                         pass  # Skip if can't read file
             elif file_path.is_dir():
                 if file_path.name != '__pycache__':

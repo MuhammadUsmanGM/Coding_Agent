@@ -34,7 +34,7 @@ from config.settings import settings
 app = FastAPI(
     title="FastAPI Project",
     description="A FastAPI project template",
-    version="1.0.2",
+    version="1.0.3",
     openapi_url="/api/v1/openapi.json"
 )
 

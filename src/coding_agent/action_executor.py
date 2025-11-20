@@ -47,6 +47,40 @@ class ActionExecutor:
                     else:
                         results.append(f"❌ Error writing `{action['path']}`: {res}")
                         agent_logger.log_file_operation("write", action["path"], False, str(res))
+                elif action["type"] == "append_to_file":
+                    res = self.file_ops.append_to_file(action["path"], action["content"])
+                    if res is True:
+                        results.append(f"✅ Appended to `{action['path']}`.")
+                        agent_logger.log_file_operation("append", action["path"], True, "Content appended successfully")
+                    else:
+                        results.append(f"❌ Error appending to `{action['path']}`: {res}")
+                        agent_logger.log_file_operation("append", action["path"], False, str(res))
+                elif action["type"] == "delete_file":
+                    res = self.file_ops.delete_file(action["path"])
+                    if res is True:
+                        results.append(f"🗑️ Deleted `{action['path']}`.")
+                        agent_logger.log_file_operation("delete", action["path"], True, "File deleted successfully")
+                    else:
+                        results.append(f"❌ Error deleting `{action['path']}`: {res}")
+                        agent_logger.log_file_operation("delete", action["path"], False, str(res))
+                elif action["type"] == "list_files":
+                    pattern = action.get("pattern", "**/*.py")  # Default pattern if not specified
+                    files = self.file_ops.list_files(pattern)
+                    if isinstance(files, list) and not any(f.startswith("Error:") for f in files):
+                        results.append(f"📋 Found {len(files)} files matching '{pattern}':\n" + "\n".join(f"- {f}" for f in files))
+                        agent_logger.log_file_operation("list", pattern, True, f"Listed {len(files)} files")
+                    else:
+                        error_msg = files[0] if isinstance(files, list) else str(files)
+                        results.append(f"❌ Error listing files with pattern '{pattern}': {error_msg}")
+                        agent_logger.log_file_operation("list", pattern, False, error_msg)
+                elif action["type"] == "create_directory":
+                    res = self.file_ops.create_directory(action["path"])
+                    if res is True:
+                        results.append(f"📁 Created directory `{action['path']}`.")
+                        agent_logger.log_file_operation("create_dir", action["path"], True, "Directory created successfully")
+                    else:
+                        results.append(f"❌ Error creating directory `{action['path']}`: {res}")
+                        agent_logger.log_file_operation("create_dir", action["path"], False, str(res))
                 elif action["type"] == "git_commit":
                     self.git_ops.stage_files(".")
                     cm = self.git_ops.commit(action["message"])
@@ -58,7 +92,6 @@ class ActionExecutor:
                         from coding_agent.provider.mcp import MCPProvider
                         if isinstance(search_provider, MCPProvider) and search_provider.server_name == 'duckduckgo':
                             # Create a message to send to the search provider
-                            from coding_agent.logger import agent_logger
                             import time
 
                             search_messages = [
@@ -74,6 +107,27 @@ class ActionExecutor:
                     else:
                         results.append(f"⚠️ No search provider available for query: {action['query']}")
                         agent_logger.app_logger.warning(f"No search provider available for query: {action['query']}")
+                elif action["type"] == "analyze_code":
+                    from coding_agent.code_analyzer import CodeAnalyzer
+                    analyzer = CodeAnalyzer()
+                    # Get the file content first if path is provided
+                    if "path" in action:
+                        # Read the file content
+                        content = self.file_ops.read_file(action["path"])
+                        if content.startswith("Error:"):
+                            results.append(f"❌ Error reading file to analyze: {content}")
+                        else:
+                            analysis_result = analyzer.analyze_code(action["path"], content)
+                            suggestions = analyzer.get_code_suggestions(analysis_result)
+                            results.append(f"🔍 Code analysis for `{action['path']}`:\n" + "\n".join(f"- {suggestion}" for suggestion in suggestions))
+                    # If content is directly provided instead of a path
+                    elif "content" in action and "filename" in action:
+                        analysis_result = analyzer.analyze_code(action["filename"], action["content"])
+                        suggestions = analyzer.get_code_suggestions(analysis_result)
+                        results.append(f"🔍 Code analysis for `{action['filename']}`:\n" + "\n".join(f"- {suggestion}" for suggestion in suggestions))
+                    else:
+                        results.append("❌ Error: analyze_code action requires either 'path' or both 'content' and 'filename' parameters")
+
             return "\n".join(results), True
         except json.JSONDecodeError as e:
             agent_logger.log_error("JSON_PARSE_ERROR", str(e), "Invalid JSON in LLM response")

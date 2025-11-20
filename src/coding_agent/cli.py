@@ -55,7 +55,7 @@ def confirm_safe_execution(result):
     try:
         ask = Prompt.ask("Proceed?", choices=["y", "N"], default="N").strip().lower()
         return ask == "y"
-    except:
+    except Exception:
         # Fallback if prompt fails
         ask = input("Proceed? [y/N]: ").strip().lower()
         return ask == "y"
@@ -396,6 +396,21 @@ def execute_shell_command_safe(command):
         console.print(f"[bold cyan]Executing: {command}[/bold cyan]")
 
         import subprocess
+        # Additional security validation to prevent command injection
+        # Check for potential command injection patterns
+        injection_patterns = [
+            '&&', '||', ';', '`', '$(', '|',
+            # Check for command substitution patterns
+            '>', '>>', '<',
+            # Check for redirection that could be harmful
+        ]
+
+        cmd_lower = command.lower()
+        for pattern in injection_patterns:
+            if pattern in cmd_lower:
+                console.print(f"[bold red]❌ Blocked potentially dangerous command (injection risk): {command}[/bold red]")
+                return False
+
         result = subprocess.run(
             command,
             shell=True,
@@ -521,7 +536,7 @@ def create_plugin(agent, name):
             name=name,
             description=f"Custom plugin for {name}",
             author="User",
-            version="1.0.2"
+            version="1.0.3"
         )
         console.print(f"[bold green]Plugin '{name}' created successfully![/bold green]")
         console.print(f"Location: {plugin_path}")
@@ -829,7 +844,7 @@ def display_welcome_screen():
 
     # Create a cleaner status panel
     status_panel = Panel(
-        "[bold #00FFFF]Status:[/bold #00FFFF] [green]All systems operational[/green]  [bold #00FFFF]Version:[/bold #00FFFF] [magenta]1.0.2[/magenta]  [bold #00FFFF]Uptime:[/bold #00FFFF] [cyan]Ready for use[/cyan]\n\n"
+        "[bold #00FFFF]Status:[/bold #00FFFF] [green]All systems operational[/green]  [bold #00FFFF]Version:[/bold #00FFFF] [magenta]1.0.3[/magenta]  [bold #00FFFF]Uptime:[/bold #00FFFF] [cyan]Ready for use[/cyan]\n\n"
         "[bold #7CFC00]How to use:[/bold #7CFC00] Type coding instructions, confirm file operations, [bold]exit[/bold] to quit, or use [bold #00FFFF]/commands[/bold #00FFFF]",
         title="[bold #40E0D0]System Status[/bold #40E0D0]",
         border_style="#40E0D0",

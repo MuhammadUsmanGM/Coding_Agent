@@ -24,3 +24,11 @@
 2025-11-18 08:10:26 - codeius.app - INFO - CodingAgent initialized successfully
 2025-11-18 08:55:54 - codeius.app - INFO - CodingAgent initialized successfully
 2025-11-18 10:30:24 - codeius.app - INFO - CodingAgent initialized successfully
+2025-11-20 12:39:26 - codeius.app - ERROR - Error occurred: PATH_VALIDATION_ERROR - 'AgentConfig' object has no attribute 'restrict_file_operations_to_workspace'
+2025-11-20 12:41:45 - codeius.app - ERROR - Could not read file for analysis: Error: Absolute paths are not allowed
+2025-11-20 12:42:36 - codeius.app - WARNING - Flake8 analysis timed out
+2025-11-20 12:42:36 - codeius.app - ERROR - Error occurred: JSON_PARSE_ERROR - Expecting ',' delimiter: line 1 column 128 (char 127)
+2025-11-20 12:43:20 - codeius.app - WARNING - Flake8 analysis timed out
+2025-11-20 12:43:31 - codeius.app - WARNING - Flake8 analysis timed out
+2025-11-20 12:44:11 - codeius.app - WARNING - Flake8 analysis timed out
+2025-11-20 12:44:23 - codeius.app - WARNING - Flake8 analysis timed out
