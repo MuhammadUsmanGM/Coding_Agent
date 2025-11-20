@@ -1,5 +1,7 @@
-# src/agent.py
-
+"""
+Main agent class for the Codeius AI Coding Agent.
+Orchestrates all services to provide an intelligent coding assistant.
+"""
 from typing import Dict, Any, List, Optional, Tuple
 from coding_agent.model_manager import ModelManager
 from coding_agent.conversation_manager import ConversationManager
@@ -18,6 +20,26 @@ import os
 load_dotenv()
 
 class CodingAgent:
+    """
+    Main agent class that orchestrates all services to provide an intelligent coding assistant.
+
+    The CodingAgent integrates multiple services to provide a comprehensive coding assistance
+    experience, including model management, conversation handling, action execution,
+    security scanning, and more.
+
+    Attributes:
+        config: Agent configuration settings
+        model_manager: Handles LLM model selection and management
+        conversation_manager: Manages conversation history and context
+        action_executor: Executes actions requested by the AI
+        plugin_manager: Manages user plugins
+        context_manager: Manages project context
+        security_scanner: Performs security scans
+        security_policy_manager: Manages security policies
+        visualization_manager: Handles visualization features
+        providers: Available LLM providers
+        search_provider: Available search provider (if any)
+    """
     def __init__(self) -> None:
         # Load configuration
         self.config = config_manager.get_agent_config()
@@ -48,19 +70,42 @@ class CodingAgent:
         # agent_logger.app_logger.info("CodingAgent initialized successfully")
 
     def get_current_model_info(self) -> Optional[Dict[str, Any]]:
-        """Get information about the currently active provider/model"""
+        """
+        Get information about the currently active provider/model.
+
+        Returns:
+            Dictionary containing model information, or None if no model is active.
+        """
         return self.model_manager.get_current_model_info()
 
     def get_available_models(self) -> Dict[str, Any]:
-        """Get list of available AI models only (excluding MCP tools)"""
+        """
+        Get list of available AI models only (excluding MCP tools).
+
+        Returns:
+            Dictionary containing available models and their information.
+        """
         return self.model_manager.get_available_models()
 
     def get_available_mcp_tools(self) -> Dict[str, Any]:
-        """Get list of available MCP tools/servers"""
+        """
+        Get list of available MCP tools/servers.
+
+        Returns:
+            Dictionary containing available MCP tools and their information.
+        """
         return self.model_manager.get_available_mcp_tools()
 
     def switch_model(self, model_key: str) -> str:
-        """Switch to a specific model by key"""
+        """
+        Switch to a specific model by key.
+
+        Args:
+            model_key: The key identifying the model to switch to.
+
+        Returns:
+            String indicating the result of the model switch operation.
+        """
         result = self.model_manager.switch_model(model_key)
         if "Switched to" in result:
             agent_logger.app_logger.info(f"Model switched to {model_key}")
@@ -69,7 +114,15 @@ class CodingAgent:
         return result
 
     def system_prompt(self) -> str:
-        """Generate system prompt with agent instructions."""
+        """
+        Generate system prompt with agent instructions.
+
+        Reads additional agent instructions from AGENT.md and combines them
+        with core tool capabilities to form the complete system prompt.
+
+        Returns:
+            Formatted system prompt string for the LLM.
+        """
         # Read additional agent instructions from AGENT.md
         agent_instructions = ""
         try:
@@ -107,7 +160,20 @@ class CodingAgent:
         )
 
     def ask(self, prompt: str, max_tokens: Optional[int] = None) -> str:
-        """Process user input and return agent response."""
+        """
+        Process user input and return agent response.
+
+        Composes a dialogue with the LLM, processes the response for actions,
+        and manages the conversation state.
+
+        Args:
+            prompt: The user's input prompt to process
+            max_tokens: Optional maximum number of tokens for the response
+                        (defaults to config value if not provided)
+
+        Returns:
+            The agent's response to the user's prompt
+        """
         # Use configured max tokens if not explicitly provided
         if max_tokens is None:
             max_tokens = self.config.max_tokens
@@ -141,13 +207,33 @@ class CodingAgent:
         return response
 
     def reset_history(self) -> None:
-        """Reset conversation history."""
+        """
+        Reset conversation history.
+
+        Clears all previous conversation history, starting fresh.
+        """
         self.conversation_manager.reset_history()
 
     def add_custom_model(self, name: str, api_key: str, base_url: str, model: str) -> bool:
-        """Add a custom model to the agent"""
+        """
+        Add a custom model to the agent.
+
+        Args:
+            name: The name for the custom model
+            api_key: The API key for the model provider
+            base_url: The base URL for the model API
+            model: The specific model identifier
+
+        Returns:
+            Boolean indicating whether the model was added successfully
+        """
         return self.model_manager.add_custom_model(name, api_key, base_url, model)
 
     def list_custom_models(self) -> Dict[str, Any]:
-        """List all custom models"""
+        """
+        List all custom models.
+
+        Returns:
+            Dictionary containing all custom model information.
+        """
         return self.model_manager.list_custom_models()

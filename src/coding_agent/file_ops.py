@@ -79,8 +79,15 @@ class FileOps:
         except Exception:
             return True  # If we can't read the file, assume binary
 
-    def read_file(self, file_path: str) -> str:
-        """Read a file with security checks."""
+    def _read_file_impl(self, file_path: str) -> str:
+        """Implementation of read_file with security checks."""
+        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+
+        # Use error handler validation
+        validation_response = validate_file_path(file_path)
+        if not validation_response.success:
+            return f"Error: {validation_response.message}"
+
         is_valid, result = self._validate_path(file_path)
         if not is_valid:
             return f"Error: {result}"
@@ -88,36 +95,69 @@ class FileOps:
         path = result
         # Additional check to prevent reading system files
         if not path.exists() or not path.is_file():
-            agent_logger.log_file_operation("read", file_path, False, "File does not exist or is not a file")
-            return f"Error: File '{file_path}' does not exist or is not a file"
+            error_response = handle_error(
+                ErrorCode.FILE_NOT_FOUND,
+                f"File '{file_path}' does not exist or is not a file"
+            )
+            agent_logger.log_file_operation("read", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         # Check if it's a binary file
         if self._is_binary_file(path):
-            agent_logger.log_file_operation("read", file_path, False, "Attempt to read binary file")
-            return f"Error: Cannot read binary file '{file_path}'"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                f"Cannot read binary file '{file_path}'"
+            )
+            agent_logger.log_file_operation("read", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         # Validate file type
         if not self._validate_file_type(file_path):
-            agent_logger.log_file_operation("read", file_path, False, "File type not allowed")
-            return f"Error: File extension '{path.suffix}' is not allowed for reading"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                f"File extension '{path.suffix}' is not allowed for reading"
+            )
+            agent_logger.log_file_operation("read", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         try:
             # Limit file size to prevent reading very large files
             file_size = path.stat().st_size
             max_size = self.config.max_file_size_mb * 1024 * 1024  # Convert to bytes
             if file_size > max_size:
-                agent_logger.log_file_operation("read", file_path, False, f"File too large: {file_size} bytes")
-                return f"Error: File too large to read (max: {self.config.max_file_size_mb}MB)"
+                error_response = handle_error(
+                    ErrorCode.FILE_TOO_LARGE,
+                    f"File too large to read (max: {self.config.max_file_size_mb}MB)"
+                )
+                agent_logger.log_file_operation("read", file_path, False, error_response.message)
+                return f"Error: {error_response.message}"
 
             content = path.read_text(encoding="utf-8")
             agent_logger.log_file_operation("read", file_path, True, f"Read {len(content)} characters")
             return content
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error reading file '{file_path}': {e}"
+            )
             agent_logger.log_file_operation("read", file_path, False, str(e))
-            return f"Error reading file '{file_path}': {e}"
+            return f"Error: {error_response.message}"
+
+    def read_file(self, file_path: str) -> str:
+        """Read a file with security checks."""
+        # Use the original implementation (without complex caching for now)
+        return self._read_file_impl(file_path)
 
     def write_file(self, file_path: str, content: str) -> Union[bool, str]:
         """Write to a file with security checks."""
+        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from coding_agent.performance import invalidate_file_cache
+
+        # Use error handler validation
+        validation_response = validate_file_path(file_path)
+        if not validation_response.success:
+            return f"Error: {validation_response.message}"
+
         is_valid, result = self._validate_path(file_path)
         if not is_valid:
             return f"Error: {result}"
@@ -125,27 +165,49 @@ class FileOps:
         path = result
         # Validate file type
         if not self._validate_file_type(file_path):
-            agent_logger.log_file_operation("write", file_path, False, "File type not allowed")
-            return f"Error: File extension '{path.suffix}' is not allowed for writing"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                f"File extension '{path.suffix}' is not allowed for writing"
+            )
+            agent_logger.log_file_operation("write", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         # Check if content is binary (has null bytes or non-printable characters)
         try:
             content.encode('utf-8')
         except UnicodeEncodeError:
-            agent_logger.log_file_operation("write", file_path, False, "Content contains invalid characters")
-            return f"Error: Content contains invalid characters"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                "Content contains invalid characters"
+            )
+            agent_logger.log_file_operation("write", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
+            # Invalidate cache for this file since we're changing it
+            invalidate_file_cache(file_path)
             agent_logger.log_file_operation("write", file_path, True, f"Wrote {len(content)} characters")
             return True
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error writing file '{file_path}': {e}"
+            )
             agent_logger.log_file_operation("write", file_path, False, str(e))
-            return f"Error writing file '{file_path}': {e}"
+            return f"Error: {error_response.message}"
 
     def append_to_file(self, file_path: str, content: str) -> Union[bool, str]:
         """Append content to an existing file with security checks."""
+        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from coding_agent.performance import invalidate_file_cache
+
+        # Use error handler validation
+        validation_response = validate_file_path(file_path)
+        if not validation_response.success:
+            return f"Error: {validation_response.message}"
+
         is_valid, result = self._validate_path(file_path)
         if not is_valid:
             return f"Error: {result}"
@@ -153,15 +215,23 @@ class FileOps:
         path = result
         # Validate file type
         if not self._validate_file_type(file_path):
-            agent_logger.log_file_operation("append", file_path, False, "File type not allowed")
-            return f"Error: File extension '{path.suffix}' is not allowed for appending"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                f"File extension '{path.suffix}' is not allowed for appending"
+            )
+            agent_logger.log_file_operation("append", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         # Check if content is binary (has null bytes or non-printable characters)
         try:
             content.encode('utf-8')
         except UnicodeEncodeError:
-            agent_logger.log_file_operation("append", file_path, False, "Content contains invalid characters")
-            return f"Error: Content contains invalid characters"
+            error_response = handle_error(
+                ErrorCode.INVALID_FILE_TYPE,
+                "Content contains invalid characters"
+            )
+            agent_logger.log_file_operation("append", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         try:
             # Check if file exists before appending
@@ -173,14 +243,28 @@ class FileOps:
                 # Append to existing file
                 with open(path, "a", encoding="utf-8") as f:
                     f.write(content)
+            # Invalidate cache for this file since we're changing it
+            invalidate_file_cache(file_path)
             agent_logger.log_file_operation("append", file_path, True, f"Appended {len(content)} characters")
             return True
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error appending to file '{file_path}': {e}"
+            )
             agent_logger.log_file_operation("append", file_path, False, str(e))
-            return f"Error appending to file '{file_path}': {e}"
+            return f"Error: {error_response.message}"
 
     def delete_file(self, file_path: str) -> Union[bool, str]:
         """Delete a file with security checks."""
+        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from coding_agent.performance import invalidate_file_cache
+
+        # Use error handler validation
+        validation_response = validate_file_path(file_path)
+        if not validation_response.success:
+            return f"Error: {validation_response.message}"
+
         is_valid, result = self._validate_path(file_path)
         if not is_valid:
             return f"Error: {result}"
@@ -188,23 +272,40 @@ class FileOps:
         path = result
         # Additional check to prevent deleting non-existent files
         if not path.exists() or not path.is_file():
-            agent_logger.log_file_operation("delete", file_path, False, "File does not exist or is not a file")
-            return f"Error: File '{file_path}' does not exist or is not a file"
+            error_response = handle_error(
+                ErrorCode.FILE_NOT_FOUND,
+                f"File '{file_path}' does not exist or is not a file"
+            )
+            agent_logger.log_file_operation("delete", file_path, False, error_response.message)
+            return f"Error: {error_response.message}"
 
         try:
             path.unlink()  # Delete the file
+            # Invalidate cache for this file since we're removing it
+            invalidate_file_cache(file_path)
             agent_logger.log_file_operation("delete", file_path, True, "File deleted successfully")
             return True
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error deleting file '{file_path}': {e}"
+            )
             agent_logger.log_file_operation("delete", file_path, False, str(e))
-            return f"Error deleting file '{file_path}': {e}"
+            return f"Error: {error_response.message}"
 
     def list_files(self, pattern: str = "**/*.py") -> list[str]:
         """List files with security checks."""
+        from coding_agent.error_handler import handle_error, handle_success, ErrorCode
+
         # Ensure the pattern is safe and doesn't contain path traversal
         if '..' in pattern:
-            agent_logger.log_error("LIST_FILES_ERROR", "Pattern contains path traversal", pattern)
-            return ["Error: Pattern contains invalid characters"]
+            error_response = handle_error(
+                ErrorCode.SECURITY_VIOLATION,
+                "Pattern contains path traversal",
+                {"pattern": pattern}
+            )
+            agent_logger.log_error("LIST_FILES_ERROR", error_response.message, pattern)
+            return [f"Error: {error_response.message}"]
 
         try:
             files = []
@@ -217,11 +318,23 @@ class FileOps:
             agent_logger.log_file_operation("list", pattern, True, f"Found {len(files)} files")
             return files
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error listing files with pattern '{pattern}': {e}",
+                {"pattern": pattern}
+            )
             agent_logger.log_error("LIST_FILES_ERROR", str(e), pattern)
-            return [f"Error listing files with pattern '{pattern}': {e}"]
+            return [f"Error: {error_response.message}"]
 
     def create_directory(self, dir_path: str) -> Union[bool, str]:
         """Create a directory with security checks."""
+        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+
+        # Use error handler validation
+        validation_response = validate_file_path(dir_path)
+        if not validation_response.success:
+            return f"Error: {validation_response.message}"
+
         is_valid, result = self._validate_path(dir_path)
         if not is_valid:
             return f"Error: {result}"
@@ -232,5 +345,9 @@ class FileOps:
             agent_logger.log_file_operation("create_dir", dir_path, True, "Directory created successfully")
             return True
         except Exception as e:
+            error_response = handle_error(
+                ErrorCode.UNKNOWN_ERROR,
+                f"Error creating directory '{dir_path}': {e}"
+            )
             agent_logger.log_file_operation("create_dir", dir_path, False, str(e))
-            return f"Error creating directory '{dir_path}': {e}"
+            return f"Error: {error_response.message}"
