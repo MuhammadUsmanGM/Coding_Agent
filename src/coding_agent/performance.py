@@ -10,19 +10,20 @@ from functools import wraps
 from datetime import datetime, timedelta
 from coding_agent.config import config_manager
 from coding_agent.logger import agent_logger
+from pathlib import Path
 
 
 class SimpleCache:
     """Simple in-memory cache with TTL (Time To Live)."""
-    
+
     def __init__(self, ttl_seconds: int = 300):  # 5 minutes default
         self.cache: Dict[str, Dict[str, Any]] = {}
         self.ttl_seconds = ttl_seconds
-    
+
     def _is_expired(self, timestamp: datetime) -> bool:
         """Check if cached entry is expired."""
-        return datetime.now() < timestamp + timedelta(seconds=self.ttl_seconds)
-    
+        return datetime.now() >= timestamp + timedelta(seconds=self.ttl_seconds)
+
     def get(self, key: str) -> Optional[Any]:
         """Get value from cache."""
         if key in self.cache:
@@ -33,7 +34,7 @@ class SimpleCache:
                 # Clean up expired entry
                 del self.cache[key]
         return None
-    
+
     def set(self, key: str, value: Any) -> None:
         """Set value in cache."""
         expires_at = datetime.now() + timedelta(seconds=self.ttl_seconds)
@@ -41,19 +42,122 @@ class SimpleCache:
             'value': value,
             'expires_at': expires_at
         }
-    
+
     def clear(self) -> None:
         """Clear all cached entries."""
         self.cache.clear()
-    
+
     def remove(self, key: str) -> None:
         """Remove specific entry from cache."""
         if key in self.cache:
             del self.cache[key]
 
 
-# Global cache instance
+# Additional cache for file operations
+class FileOperationCache:
+    """Cache specifically for file operations with file modification time tracking."""
+
+    def __init__(self, ttl_seconds: int = 300):  # 5 minutes default
+        self.cache: Dict[str, Dict[str, Any]] = {}
+        self.ttl_seconds = ttl_seconds
+
+    def _is_expired(self, timestamp: datetime, file_path: str) -> bool:
+        """Check if cached entry is expired or if file has changed."""
+        # Check if TTL has expired
+        if datetime.now() >= timestamp + timedelta(seconds=self.ttl_seconds):
+            return True
+
+        # Check if file exists and if it has been modified since caching
+        try:
+            file_stat = Path(file_path).stat()
+            if hasattr(file_stat, 'st_mtime'):
+                file_modified = datetime.fromtimestamp(file_stat.st_mtime)
+                cache_time = timestamp
+                return file_modified > cache_time
+        except (OSError, AttributeError):
+            # If we can't check file stats, consider cache expired
+            return True
+
+        return False
+
+    def get(self, key: str, file_path: str) -> Optional[Any]:
+        """Get value from cache, considering file modification time."""
+        if key in self.cache:
+            entry = self.cache[key]
+            if not self._is_expired(entry['timestamp'], file_path):
+                return entry['value']
+            else:
+                # Clean up expired entry
+                del self.cache[key]
+        return None
+
+    def set(self, key: str, file_path: str, value: Any) -> None:
+        """Set value in cache with current timestamp."""
+        self.cache[key] = {
+            'value': value,
+            'timestamp': datetime.now()
+        }
+
+    def clear(self) -> None:
+        """Clear all cached entries."""
+        self.cache.clear()
+
+    def remove(self, key: str) -> None:
+        """Remove specific entry from cache."""
+        if key in self.cache:
+            del self.cache[key]
+
+
+# Global cache instances
 api_cache = SimpleCache(ttl_seconds=config_manager.get_agent_config().mcp_server_timeout)
+file_cache = FileOperationCache(ttl_seconds=300)  # 5 minute TTL for file contents
+
+
+def cached_file_operation(operation: str = "read", ttl_seconds: int = 300):
+    """
+    Decorator for caching file operations.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, file_path, *args, **kwargs):
+            # Create a cache key based on operation type and file path
+            cache_key = f"file_{operation}_{file_path}"
+
+            # Try to get result from file-specific cache
+            cached_result = file_cache.get(cache_key, file_path)
+            if cached_result is not None:
+                agent_logger.api_logger.debug(f"File cache HIT for {cache_key}")
+                return cached_result
+
+            # Execute the original function
+            start_time = time.time()
+            result = func(self, file_path, *args, **kwargs)
+            execution_time = time.time() - start_time
+
+            # Cache the result only if it was successful (not an error)
+            # and the operation took more than a threshold time
+            if (not (isinstance(result, str) and result.startswith("Error:"))
+                and execution_time > 0.01):  # Only cache if operation took more than 10ms
+                file_cache.set(cache_key, file_path, result)
+                agent_logger.api_logger.debug(f"File cache SET for {cache_key}")
+
+            return result
+        return wrapper
+    return decorator
+
+
+def invalidate_file_cache(file_path: str):
+    """Invalidate all cache entries for a specific file."""
+    # This is a simplified version - in a real implementation, you'd need to
+    # track which keys are associated with the file_path and remove them
+    # For now, we just clear the entire file cache
+    file_cache.clear()
+
+
+def clear_all_caches():
+    """Clear both API and file caches."""
+    api_cache.clear()
+    file_cache.clear()
 
 
 def generate_cache_key(*args, **kwargs) -> str:
