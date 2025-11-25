@@ -36,7 +36,7 @@ from rich.table import Table
 from rich.box import HEAVY_HEAD
 from rich import print as rprint
 from rich.rule import Rule
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 import pyfiglet
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style

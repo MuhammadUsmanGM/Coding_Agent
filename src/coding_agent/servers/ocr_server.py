@@ -6,11 +6,12 @@ import pytesseract
 from PIL import Image
 import tempfile
 import os
+import asyncio
 
 app = Flask(__name__)
 
 @app.route('/ocr', methods=['POST'])
-def ocr():
+async def ocr():
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
     
@@ -22,10 +23,12 @@ def ocr():
         temp_path = temp_file.name
 
     try:
-        # Open and process the image
-        with Image.open(temp_path) as img:
-            # Perform OCR using pytesseract
-            text = pytesseract.image_to_string(img)
+        # Open and process the image asynchronously
+        loop = asyncio.get_event_loop()
+        img = await loop.run_in_executor(None, Image.open, temp_path)
+
+        # Perform OCR using pytesseract
+        text = await loop.run_in_executor(None, pytesseract.image_to_string, img)
         
         # Clean up the temporary file
         os.unlink(temp_path)
@@ -38,4 +41,5 @@ def ocr():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=9800)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=9800)

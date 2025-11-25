@@ -10,6 +10,11 @@ from coding_agent.logger import agent_logger
 from coding_agent.error_handler import handle_error, handle_success, ErrorCode
 import subprocess
 import sys
+import pycodestyle
+import os
+from pyflakes import api as pyflakes_api
+import io
+from contextlib import redirect_stdout, redirect_stderr
 
 
 class CodeAnalyzer:
@@ -45,7 +50,7 @@ class CodeAnalyzer:
                 
         except Exception as e:
             agent_logger.app_logger.error(f"Error analyzing code in {file_path}: {str(e)}")
-            return {"errors": [f"Analysis failed: {str(e)}"]}
+            return handle_error(ErrorCode.UNKNOWN_ERROR, f"Analysis failed: {str(e)}").__dict__
     
     def _analyze_python(self, content: str, file_path: str) -> Dict[str, Any]:
         """Analyze Python code using AST and other tools."""
@@ -62,27 +67,21 @@ class CodeAnalyzer:
             # Check for complexity
             complexity = self._calculate_python_complexity(tree)
             metrics["cyclomatic_complexity"] = complexity
-            
-            # Run flake8 if available for more detailed analysis
+
+            # Run pycodestyle for style checks
             try:
-                result = subprocess.run([
-                    sys.executable, "-m", "flake8", 
-                    "--format=json", 
-                    "--max-line-length=120"
-                ], input=content, text=True, capture_output=True, timeout=10)
-                
-                if result.returncode == 0:
-                    # No issues found by flake8
-                    pass
-                else:
-                    # Parse flake8 results
-                    flake8_issues = self._parse_flake8_output(result.stdout)
-                    issues.extend(flake8_issues)
-            except subprocess.TimeoutExpired:
-                agent_logger.app_logger.warning("Flake8 analysis timed out")
+                style_issues = self._analyze_python_pycodestyle(content, file_path)
+                issues.extend(style_issues)
             except Exception:
-                # Flake8 might not be installed, continue with basic analysis
-                agent_logger.app_logger.debug("Flake8 not available, using basic analysis only")
+                agent_logger.app_logger.debug("pycodestyle not available or encountered an error.")
+
+            # Run pyflakes for logical error checks
+            try:
+                flakes_issues = self._analyze_python_pyflakes(content, file_path)
+                issues.extend(flakes_issues)
+            except Exception:
+                agent_logger.app_logger.debug("pyflakes not available or encountered an error.")
+            
             
         except SyntaxError as e:
             issues.append({
@@ -149,7 +148,111 @@ class CodeAnalyzer:
                 })
         
         return issues
-        
+
+    def _analyze_python_pycodestyle(self, content: str, file_path: str) -> List[Dict[str, Any]]:
+        """Analyze Python code using pycodestyle."""
+        style_issues = []
+        # Create a Checker instance
+        # Suppress stdout/stderr to capture errors directly
+        # We'll need a custom reporter to capture the errors
+        class CustomReporter(pycodestyle.BaseReport):
+            def __init__(self, options):
+                super().__init__(options)
+                self.results = []
+
+            def error_or_warning(self, line_number, offset, text, check):
+                self.results.append({
+                    "type": "style",
+                    "message": text,
+                    "line": line_number,
+                    "column": offset,
+                    "code": check.code,
+                    "severity": "warning"
+                })
+
+        # We need a dummy file to pass to pycodestyle if content is from memory
+        # Or, we can use a temporary file if file_path is not available
+        # For now, let's assume file_path is always provided or we create a temp file.
+        # pycodestyle expects a filename to analyze, even if content is passed.
+        # This makes it easier for it to resolve configurations like .editorconfig
+
+        # If content is provided and file_path is not, save to a temp file
+        temp_file = False
+        if file_path == "" or file_path is None:
+            import tempfile
+            fd, temp_file_path = tempfile.mkstemp(suffix=".py")
+            with open(fd, "w") as f:
+                f.write(content)
+            file_path = temp_file_path
+            temp_file = True
+
+        try:
+            # pycodestyle expects a list of filenames
+            # We can override read_file to use our content, but it's simpler to use a temp file for robustness
+            # Or, we can pass the lines directly
+            lines = content.splitlines(keepends=True)
+            checker = pycodestyle.Checker(filename=file_path, lines=lines, reporter=CustomReporter)
+            checker.check_all()
+            style_issues.extend(checker.report.results)
+        except Exception as e:
+            agent_logger.app_logger.warning(f"Error running pycodestyle on {file_path}: {str(e)}", exc_info=True)
+        finally:
+            if temp_file and os.path.exists(file_path):
+                os.remove(file_path)
+
+        return style_issues
+
+    def _analyze_python_pyflakes(self, content: str, file_path: str) -> List[Dict[str, Any]]:
+        """Analyze Python code using pyflakes."""
+        pyflakes_issues = []
+        try:
+            # pyflakes expects a file-like object or a filename
+            # We will use a StringIO to pass content directly
+            import io
+            from contextlib import redirect_stdout, redirect_stderr
+
+            # Capture stdout and stderr from pyflakes
+            stdout_capture = io.StringIO()
+            stderr_capture = io.StringIO()
+
+            with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+                # pyflakes_api.check expects a file path as its first argument
+                # and then a file-like object for input if content is not from a real file.
+                # If file_path is None or empty, create a dummy name for pyflakes
+                if not file_path:
+                    file_path = "<stdin>.py"
+
+                # pyflakes_api.check returns the number of errors
+                # but the detailed messages are printed to stderr
+                pyflakes_api.check(io.StringIO(content), file_path)
+
+            # Process captured stderr for issues
+            for line in stderr_capture.getvalue().splitlines():
+                # pyflakes output format: filename:line:column: message
+                parts = line.split(':', 3)
+                if len(parts) >= 4:
+                    try:
+                        line_num = int(parts[1])
+                        col_num = int(parts[2])
+                        message = parts[3].strip()
+                        pyflakes_issues.append({
+                            "type": "error", # pyflakes typically reports errors or warnings
+                            "message": message,
+                            "line": line_num,
+                            "column": col_num,
+                            "code": "", # pyflakes doesn't provide explicit error codes like flake8
+                            "severity": "error" if "Undefined name" in message or "syntax error" in message.lower() else "warning"
+                        })
+                    except ValueError:
+                        agent_logger.app_logger.warning(f"Could not parse pyflakes output line: {line}")
+                else:
+                    agent_logger.app_logger.warning(f"Unexpected pyflakes output format: {line}")
+
+        except Exception as e:
+            agent_logger.app_logger.warning(f"Error running pyflakes on {file_path}: {str(e)}", exc_info=True)
+
+        return pyflakes_issues
+
     def _calculate_python_complexity(self, tree: ast.AST) -> int:
         """Calculate cyclomatic complexity of Python code."""
         complexity = 1  # Base complexity
@@ -176,7 +279,8 @@ class CodeAnalyzer:
                     "code": result.get("error_code", ""),
                     "severity": "warning"
                 })
-        except Exception:
+        except Exception as e:
+            agent_logger.app_logger.warning(f"Error parsing flake8 output as JSON: {e}. Attempting text parse.", exc_info=True)
             # If JSON parsing fails, try to parse as text
             for line in output.splitlines():
                 if ':' in line:

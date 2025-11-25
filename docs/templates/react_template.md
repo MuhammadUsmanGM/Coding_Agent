@@ -1,37 +1,109 @@
-# React Template Component Documentation
+# React Project Template
 
 ## Overview
-The `react_template.py` file contains code generation templates for creating new React/JavaScript projects. It provides scaffolding for React applications with modern best practices and standard configurations.
+The React Project Template creates a modern React application structure using Create React App as the foundation. It includes component architecture, routing, state management, and API integration capabilities.
 
-## Key Classes and Functions
+## Features
+- Create React App foundation for quick setup
+- Component-based architecture with proper folder structure
+- React Router for navigation
+- API service integration
+- State management patterns
+- CSS modules support
+- Responsive design with Bootstrap
+- Sample components and pages
+- Environment configuration
+- Testing setup ready
 
-### ReactTemplate Class
-- **Purpose**: Generates React project scaffolding and boilerplate code
-- **Key Responsibilities**:
-  - Creates React project structure with proper directories
-  - Generates package.json with standard dependencies
-  - Creates basic React component files
-  - Sets up standard configurations (ESLint, Prettier, etc.)
-  - Provides common React component patterns and templates
+## Generated Structure
+```
+project_name/
+├── public/                 # Static assets
+│   └── index.html
+├── src/                    # Source code
+│   ├── index.js           # Main entry point
+│   ├── index.css          # Global styles
+│   ├── App.js             # Main App component
+│   ├── App.css            # App-specific styles
+│   ├── components/        # Reusable UI components
+│   │   ├── Header.js
+│   │   ├── Header.css
+│   │   ├── Footer.js
+│   │   └── Footer.css
+│   ├── pages/             # Page components
+│   │   ├── Home.js
+│   │   ├── Home.css
+│   │   └── About.js
+│   ├── hooks/             # Custom React hooks
+│   │   └── useApi.js
+│   ├── services/          # API services
+│   │   └── apiService.js
+│   ├── utils/             # Utility functions
+│   ├── styles/            # CSS files
+│   │   ├── Header.css
+│   │   ├── Footer.css
+│   │   └── Home.css
+│   └── assets/            # Images and assets
+├── package.json           # Node.js dependencies and scripts
+├── .env                  # Environment variables
+├── .gitignore            # Git ignore rules
+└── README.md             # Project documentation
+```
 
-### Generated Project Structure
-- `public/` directory with HTML template
-- `src/` directory with React components
-- `src/index.js` as entry point
-- Standard React component structure
-- Configuration files for build tools
+## Setup and Usage
+1. Generate the project using Codeius AI
+2. Install dependencies: `npm install`
+3. Set up environment variables in `.env`
+4. Start the development server: `npm start`
 
-## Key Methods
-- `create_react_project(self, project_path, project_name)` - Main method to create a React project
-- `create_package_json(self, project_path, project_name)` - Creates package.json with dependencies
-- `create_src_directory(self, project_path)` - Creates source directory structure
-- `create_main_component(self, project_path, project_name)` - Creates main React component
-- `create_index_files(self, project_path)` - Creates index files and entry points
+## Key Components
 
-## Dependencies
-- `os` and `pathlib` - For file and directory operations
-- `json` - For generating package.json
-- Standard Python file operations
+### Main App Component (`src/App.js`)
+- React Router setup for navigation
+- Main layout with Header, Content, and Footer
+- Route definitions for different pages
+- State management structure
 
-## Usage Context
-This component is used when generating new React projects via the `/scaffold` command or similar functionality in the agent. It provides a quick way to start new React projects with proper structure and configurations.
+### Components (`src/components/`)
+- **Header**: Navigation bar with links
+- **Footer**: Site footer information
+- Reusable UI components following React patterns
+
+### Pages (`src/pages/`)
+- **Home**: Main landing page with features showcase
+- **About**: Information page about the project
+- Additional pages can be added as needed
+
+### Services (`src/services/apiService.js`)
+- API request functions using fetch
+- Error handling for API calls
+- Environment-based API URL configuration
+
+### Custom Hooks (`src/hooks/useApi.js`)
+- Custom hook for API calls
+- Loading and error state management
+- Reusable data fetching logic
+
+## Environment Variables
+- `REACT_APP_API_URL` - Base URL for API requests
+
+## Extending the Template
+1. Add new components in the components directory
+2. Create additional pages in the pages directory
+3. Add new API service functions as needed
+4. Implement form handling and validation
+5. Add state management with Context API or Redux
+6. Include additional UI libraries for more components
+
+## Best Practices
+- Follow component-based architecture
+- Use hooks for state management and side effects
+- Implement proper error handling
+- Use environment variables for configuration
+- Follow React best practices for performance
+- Organize code by feature when possible
+
+## Security Features
+- Environment-based configuration of API endpoints
+- Proper handling of sensitive data
+- No hardcoded credentials in source code

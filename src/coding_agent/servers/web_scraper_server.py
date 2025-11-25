@@ -8,6 +8,9 @@ import os
 import requests
 from urllib.parse import urljoin, urlparse
 import re
+from ...coding_agent.performance import rate_limit
+import asyncio
+import aiohttp
 
 app = Flask(__name__)
 
@@ -80,13 +83,16 @@ def scrape_local_directory(dir_path, selector):
         'results': results
     }
 
-def scrape_url(url, selector):
-    """Scrape content from a URL"""
+@rate_limit(max_calls=5, time_window=60) # 5 calls per minute
+async def scrape_url(url, selector):
+    """Scrape content from a URL asynchronously using aiohttp."""
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                content = await response.text()
+
+        soup = BeautifulSoup(content, 'html.parser')
         elements = soup.select(selector)
         
         results = []
@@ -109,8 +115,8 @@ def scrape_url(url, selector):
         return {'error': str(e)}
 
 @app.route('/scrape', methods=['POST'])
-def scrape():
-    """Scrape content from files, directories, or URLs using CSS selectors"""
+async def scrape():
+    """Scrape content from files, directories, or URLs using CSS selectors asynchronously"""
     try:
         target = request.json.get('target', '')
         selector = request.json.get('selector', '*')  # Default to all elements
@@ -133,7 +139,7 @@ def scrape():
             # Validate that it's a URL
             parsed = urlparse(target)
             if parsed.scheme in ['http', 'https']:
-                result = scrape_url(target, selector)
+                result = await scrape_url(target, selector)
                 return jsonify(result)
             else:
                 return jsonify({'error': f'Invalid target: {target}. Must be a valid file path, directory, or URL.'}), 400
@@ -142,4 +148,5 @@ def scrape():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=10600)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=10600)

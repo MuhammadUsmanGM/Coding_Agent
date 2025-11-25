@@ -31,6 +31,8 @@ class SimpleCache:
     def __init__(self, ttl_seconds: int = 300):  # 5 minutes default
         self.cache: Dict[str, Dict[str, Any]] = {}
         self.ttl_seconds = ttl_seconds
+        self.hits = 0
+        self.misses = 0
 
     def _is_expired(self, timestamp: datetime) -> bool:
         """Check if cached entry is expired."""
@@ -41,10 +43,12 @@ class SimpleCache:
         if key in self.cache:
             entry = self.cache[key]
             if datetime.now() < entry['expires_at']:
+                self.hits += 1
                 return entry['value']
             else:
                 # Clean up expired entry
                 del self.cache[key]
+        self.misses += 1
         return None
 
     def set(self, key: str, value: Any) -> None:
@@ -72,6 +76,8 @@ class FileOperationCache:
     def __init__(self, ttl_seconds: int = 300):  # 5 minutes default
         self.cache: Dict[str, Dict[str, Any]] = {}
         self.ttl_seconds = ttl_seconds
+        self.hits = 0
+        self.misses = 0
 
     def _is_expired(self, timestamp: datetime, file_path: str) -> bool:
         """Check if cached entry is expired or if file has changed."""
@@ -97,10 +103,12 @@ class FileOperationCache:
         if key in self.cache:
             entry = self.cache[key]
             if not self._is_expired(entry['timestamp'], file_path):
+                self.hits += 1
                 return entry['value']
             else:
                 # Clean up expired entry
                 del self.cache[key]
+        self.misses += 1
         return None
 
     def set(self, key: str, file_path: str, value: Any) -> None:

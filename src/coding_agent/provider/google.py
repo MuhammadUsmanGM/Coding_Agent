@@ -3,6 +3,7 @@
 import os
 import requests
 from .base import ProviderBase
+from coding_agent.performance import rate_limit
 
 class GoogleProvider(ProviderBase):
     def __init__(self, api_key=None, base_url=None, model=None):
@@ -10,6 +11,7 @@ class GoogleProvider(ProviderBase):
         self.base_url = base_url or os.getenv("GOOGLE_BASE_URL", "https://generativelanguage.googleapis.com/v1beta")
         self.model = model or os.getenv("GOOGLE_API_MODEL", "gemini-1.5-flash")
 
+    @rate_limit(max_calls=10, time_window=60) # 10 calls per minute
     def chat(self, messages, max_tokens=2048):
         url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
         # Convert OpenAI-style messages to Gemini content objects

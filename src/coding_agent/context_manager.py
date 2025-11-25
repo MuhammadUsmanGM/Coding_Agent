@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import ast
 import re
+from coding_agent.performance import FileOperationCache, generate_cache_key
+from coding_agent.logger import agent_logger
 
 
 @dataclass
@@ -34,6 +36,7 @@ class ProjectContext:
     root_path: str
     last_accessed: datetime
     files: List[str] = field(default_factory=list)
+    file_mtimes: Dict[str, float] = field(default_factory=dict)
     imports: Dict[str, List[str]] = field(default_factory=dict)  # file -> imported modules
     functions: List[CodeContext] = field(default_factory=list)
     classes: List[CodeContext] = field(default_factory=list)
@@ -50,6 +53,7 @@ class ContextManager:
         self.current_project: Optional[ProjectContext] = None
         self.context_file = self.context_dir / "context.json"
         self.state_file = self.context_dir / "state.pkl"
+        self.file_analysis_cache = FileOperationCache(ttl_seconds=3600) # Cache file analysis for 1 hour
         
         # Ensure context directory exists
         self.context_dir.mkdir(exist_ok=True)
@@ -70,14 +74,17 @@ class ContextManager:
                     root_path=data['root_path'],
                     last_accessed=datetime.fromisoformat(data['last_accessed']),
                     files=data['files'],
+                    file_mtimes=data.get('file_mtimes', {}),
                     imports=data.get('imports', {}),
                     dependencies=data.get('dependencies', []),
                     recent_files=data.get('recent_files', [])
                 )
                 return True
-        except (json.JSONDecodeError, KeyError, ValueError, TypeError):
-            # If there's an error loading, start fresh
-            pass
+        except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
+            agent_logger.app_logger.warning(f"Error loading project context from {self.context_file}: {e}. Starting fresh.")
+            # Consider using handle_error here if context loading failure is a critical, reportable error
+            # For now, we log and return False to indicate reinitialization
+            return False
         
         return False
     
@@ -91,6 +98,7 @@ class ContextManager:
             'root_path': self.current_project.root_path,
             'last_accessed': self.current_project.last_accessed.isoformat(),
             'files': self.current_project.files,
+            'file_mtimes': self.current_project.file_mtimes,
             'imports': self.current_project.imports,
             'dependencies': self.current_project.dependencies,
             'recent_files': self.current_project.recent_files[-20:]  # Keep last 20
@@ -132,12 +140,25 @@ class ContextManager:
         self.current_project.files = [str(f.relative_to(root_path)) for f in py_files]
         
         # Analyze each Python file for functions, classes, imports, etc.
+        updated_mtimes = {}
         for py_file in py_files:
-            try:
-                self.analyze_file(py_file)
-            except Exception:
-                # Skip files that can't be parsed
-                continue
+            rel_path = str(py_file.relative_to(root_path))
+            current_mtime = py_file.stat().st_mtime
+
+            if rel_path not in self.current_project.file_mtimes or \
+               self.current_project.file_mtimes[rel_path] < current_mtime:
+                try:
+                    self.analyze_file(py_file)
+                    updated_mtimes[rel_path] = current_mtime
+                except Exception as e:
+                    agent_logger.app_logger.warning(f"Skipping file {py_file} due to analysis error: {e}")
+                    continue
+            else:
+                # File has not changed, retain old mtime
+                updated_mtimes[rel_path] = self.current_project.file_mtimes[rel_path]
+
+        self.current_project.file_mtimes = updated_mtimes
+
     
     def analyze_file(self, file_path: Path):
         """Analyze a single file and extract code elements"""
@@ -145,9 +166,24 @@ class ContextManager:
             return
         
         try:
+            rel_path = str(file_path.relative_to(Path(self.current_project.root_path)))
+            # Remove old entries for this file before re-analyzing
+            self.current_project.functions = [f for f in self.current_project.functions if f.file_path != rel_path]
+            self.current_project.classes = [c for c in self.current_project.classes if c.file_path != rel_path]
+            self.current_project.imports.pop(rel_path, None)
+
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
+            cache_key = generate_cache_key(rel_path, hashlib.md5(content.encode()).hexdigest())
+            cached_analysis = self.file_analysis_cache.get(cache_key, str(file_path))
+
+            if cached_analysis:
+                self.current_project.imports[rel_path] = cached_analysis["imports"]
+                self.current_project.functions.extend(cached_analysis["functions"])
+                self.current_project.classes.extend(cached_analysis["classes"])
+                return
+
             # Track this file as recently accessed
             rel_path = str(file_path.relative_to(Path(self.current_project.root_path)))
             if rel_path not in self.current_project.recent_files:
@@ -198,10 +234,16 @@ class ContextManager:
                         context_type='class'
                     )
                     self.current_project.classes.append(context)
-        
-        except Exception:
-            # Skip files that can't be processed
-            pass
+
+            # Cache the extracted analysis
+            self.file_analysis_cache.set(cache_key, str(file_path), {
+                "imports": self.current_project.imports.get(rel_path, []),
+                "functions": [f for f in self.current_project.functions if f.file_path == rel_path],
+                "classes": [c for c in self.current_project.classes if c.file_path == rel_path],
+            })
+
+        except Exception as e:
+            agent_logger.app_logger.warning(f"Error processing file {rel_path} for context extraction: {e}")
     
     def get_context_summary(self) -> Dict[str, Any]:
         """Get a summary of the current project context"""

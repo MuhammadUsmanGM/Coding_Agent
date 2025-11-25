@@ -10,6 +10,7 @@ import subprocess
 import os
 from datetime import datetime
 from typing import Dict, Any
+import asyncio
 
 app = Flask(__name__)
 
@@ -17,34 +18,38 @@ class TaskScheduler:
     def __init__(self):
         self.scheduled_tasks: Dict[str, Dict[str, Any]] = {}
         self.running = False
-        self.scheduler_thread = None
-    
-    def start_scheduler(self):
-        """Start the scheduler in a background thread"""
+
+    async def start_scheduler(self):
+        """Start the scheduler loop"""
         if not self.running:
             self.running = True
-            self.scheduler_thread = threading.Thread(target=self._run_scheduler, daemon=True)
-            self.scheduler_thread.start()
+            asyncio.create_task(self._run_scheduler())
             return {"status": "success", "message": "Scheduler started"}
         return {"status": "info", "message": "Scheduler already running"}
-    
+
     def stop_scheduler(self):
         """Stop the scheduler"""
         if self.running:
             self.running = False
-            # Clear all scheduled jobs
             schedule.clear()
             self.scheduled_tasks = {}
             return {"status": "success", "message": "Scheduler stopped and tasks cleared"}
         return {"status": "info", "message": "Scheduler not running"}
-    
-    def _run_scheduler(self):
-        """Run the scheduler in a loop"""
+
+    async def _run_scheduler(self):
+        """Run the scheduler loop asynchronously"""
         while self.running:
-            schedule.run_pending()
-            time.sleep(1)
-    
-    def schedule_task(self, task_id: str, task_type: str, interval: str, command: str = None, 
+            # Run pending synchronous schedule jobs in a thread pool executor
+            await asyncio.to_thread(schedule.run_pending)
+            await asyncio.sleep(1)
+
+    def _run_async_task_in_event_loop(self, coro):
+        """Helper to run an async coroutine from a synchronous context in the main event loop."""
+        loop = asyncio.get_event_loop()
+        # Submit the coroutine to the event loop, possibly from another thread
+        asyncio.run_coroutine_threadsafe(coro, loop)
+
+    def schedule_task(self, task_id: str, task_type: str, interval: str, command: str = None,
                      file_path: str = None, custom_script: str = None):
         """Schedule a new task based on the provided parameters"""
         try:
@@ -96,37 +101,65 @@ class TaskScheduler:
             
             # Define the task function based on task type
             if task_type == "command":
-                def task_func(task_cmd=command):
+                async def _async_command_runner(task_cmd):
                     try:
-                        result = subprocess.run(task_cmd.split(), capture_output=True, text=True)
-                        return f"Command '{task_cmd}' completed with return code {result.returncode}"
+                        process = await asyncio.create_subprocess_exec(
+                            *task_cmd.split(),
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                            text=True
+                        )
+                        stdout, stderr = await process.communicate()
+                        return f"Command '{task_cmd}' completed with return code {process.returncode}"
                     except Exception as e:
                         return f"Command '{task_cmd}' failed: {str(e)}"
-                
+
+                def task_func(task_cmd=command):
+                    result = self._run_async_task_in_event_loop(_async_command_runner(task_cmd))
+                    return result
+
                 job.do(task_func)
-                
+
             elif task_type == "test":
-                def task_func(test_path=file_path or "."):
+                async def _async_test_runner(test_path):
                     try:
-                        result = subprocess.run(["python", "-m", "pytest", test_path], 
-                                              capture_output=True, text=True)
-                        return f"Test run completed. Return code: {result.returncode}. Output: {result.stdout[:200]}"
+                        process = await asyncio.create_subprocess_exec(
+                            "python", "-m", "pytest", test_path,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                            text=True
+                        )
+                        stdout, stderr = await process.communicate()
+                        return f"Test run completed. Return code: {process.returncode}. Output: {stdout[:200]}"
                     except Exception as e:
                         return f"Test run failed: {str(e)}"
-                
+
+                def task_func(test_path=file_path or "."):
+                    result = self._run_async_task_in_event_loop(_async_test_runner(test_path))
+                    return result
+
                 job.do(task_func)
-                
+
             elif task_type == "script":
-                def task_func(script_path=file_path):
+                async def _async_script_runner(script_path):
                     try:
-                        result = subprocess.run(["python", script_path], 
-                                              capture_output=True, text=True)
-                        return f"Script '{script_path}' executed. Return code: {result.returncode}"
+                        process = await asyncio.create_subprocess_exec(
+                            "python", script_path,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                            text=True
+                        )
+                        stdout, stderr = await process.communicate()
+                        return f"Script '{script_path}' executed. Return code: {process.returncode}"
                     except Exception as e:
                         return f"Script execution failed: {str(e)}"
-                
+
+                def task_func(script_path=file_path):
+                    result = self._run_async_task_in_event_loop(_async_script_runner(script_path))
+                    return result
+
                 job.do(task_func)
-                
+
             elif task_type == "custom":
                 def task_func(custom_code=custom_script):
                     try:
@@ -190,13 +223,13 @@ class TaskScheduler:
 task_scheduler = TaskScheduler()
 
 @app.route('/schedule', methods=['POST'])
-def handle_schedule():
-    """Handle scheduling requests"""
+async def handle_schedule():
+    """Handle scheduling requests asynchronously"""
     try:
         action = request.json.get('action', 'create')
-        
+
         if action == 'start':
-            result = task_scheduler.start_scheduler()
+            result = await task_scheduler.start_scheduler()
             return jsonify(result)
         
         elif action == 'stop':
@@ -233,4 +266,5 @@ def handle_schedule():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=10800)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=10800)

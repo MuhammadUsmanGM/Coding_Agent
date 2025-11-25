@@ -4,6 +4,7 @@ import os
 import requests
 from typing import Dict, Any, Optional
 from .base import ProviderBase
+from coding_agent.performance import rate_limit
 
 class CustomProvider(ProviderBase):
     def __init__(self, name: str, api_key: str, base_url: str, model: str):
@@ -12,6 +13,7 @@ class CustomProvider(ProviderBase):
         self.base_url = base_url
         self.model = model
 
+    @rate_limit(max_calls=10, time_window=60) # 10 calls per minute
     def chat(self, messages, max_tokens=2048):
         """Make a request to the custom model API."""
         url = f"{self.base_url}/chat/completions"
