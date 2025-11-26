@@ -3,12 +3,12 @@ Action execution service for the CodingAgent.
 Separates the action execution logic from the main agent class.
 """
 from typing import Dict, Any, List, Tuple, Optional
-from coding_agent.file_ops import FileOps
-from coding_agent.git_ops import GitOps
-from coding_agent.config import config_manager
-from coding_agent.logger import agent_logger
-from coding_agent.action_handlers import ACTION_HANDLERS, ActionHandler
-from coding_agent.performance import PerformanceMonitor
+from codeius.utils.file_ops import FileOps
+from codeius.utils.git_ops import GitOps
+from codeius.config import config_manager
+from codeius.utils.logger import agent_logger
+from codeius.core.action_handlers import ACTION_HANDLERS, ActionHandler
+from codeius.core.performance import PerformanceMonitor
 import json
 import time
 

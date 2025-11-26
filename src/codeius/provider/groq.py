@@ -3,7 +3,7 @@
 import os
 import requests
 from .base import ProviderBase
-from coding_agent.performance import rate_limit
+from codeius.core.performance import rate_limit
 
 class GroqProvider(ProviderBase):
     def __init__(self, api_key=None, base_url=None, model=None):

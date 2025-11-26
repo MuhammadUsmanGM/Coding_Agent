@@ -6,8 +6,8 @@ import ast
 import json
 from typing import Dict, List, Any, Optional
 from pathlib import Path
-from coding_agent.logger import agent_logger
-from coding_agent.error_handler import handle_error, handle_success, ErrorCode
+from codeius.utils.logger import agent_logger
+from codeius.utils.error_handler import handle_error, handle_success, ErrorCode
 import subprocess
 import sys
 import pycodestyle
@@ -28,7 +28,7 @@ class CodeAnalyzer:
         try:
             # Read file if content not provided
             if content is None:
-                from coding_agent.file_ops import FileOps
+                from codeius.utils.file_ops import FileOps
                 file_ops = FileOps()
                 content = file_ops.read_file(file_path)
                 

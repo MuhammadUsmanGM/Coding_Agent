@@ -4,12 +4,12 @@ Separates the action handling logic into modular components.
 """
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Tuple, Optional
-from coding_agent.file_ops import FileOps
-from coding_agent.git_ops import GitOps
-from coding_agent.code_analyzer import CodeAnalyzer
-from coding_agent.logger import agent_logger
-from coding_agent.provider.mcp import MCPProvider
-from coding_agent.interactive_session import interactive_session_manager
+from codeius.utils.file_ops import FileOps
+from codeius.utils.git_ops import GitOps
+from codeius.core.code_analyzer import CodeAnalyzer
+from codeius.utils.logger import agent_logger
+from codeius.provider.mcp import MCPProvider
+from codeius.core.interactive_session import interactive_session_manager
 
 
 class ActionHandler(ABC):

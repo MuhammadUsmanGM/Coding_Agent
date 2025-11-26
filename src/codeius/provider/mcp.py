@@ -3,8 +3,8 @@ MCP (Model Context Protocol) Provider for the Coding Agent
 """
 import requests
 from typing import Optional, List, Dict, Any
-from coding_agent.provider.base import ProviderBase
-from coding_agent.mcp_manager import mcp_manager
+from codeius.provider.base import ProviderBase
+from codeius.core.mcp_manager import mcp_manager
 
 
 class MCPProvider(ProviderBase):

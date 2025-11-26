@@ -4,8 +4,8 @@ from pathlib import Path
 import os
 import re
 from typing import Union
-from coding_agent.config import config_manager
-from coding_agent.logger import agent_logger
+from codeius.config import config_manager
+from codeius.utils.logger import agent_logger
 import mimetypes
 
 class FileOps:
@@ -81,7 +81,7 @@ class FileOps:
 
     def _read_file_impl(self, file_path: str) -> str:
         """Implementation of read_file with security checks."""
-        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from codeius.utils.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
 
         # Use error handler validation
         validation_response = validate_file_path(file_path)
@@ -150,8 +150,8 @@ class FileOps:
 
     def write_file(self, file_path: str, content: str) -> Union[bool, str]:
         """Write to a file with security checks."""
-        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
-        from coding_agent.performance import invalidate_file_cache
+        from codeius.utils.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from codeius.core.performance import invalidate_file_cache
 
         # Use error handler validation
         validation_response = validate_file_path(file_path)
@@ -200,8 +200,8 @@ class FileOps:
 
     def append_to_file(self, file_path: str, content: str) -> Union[bool, str]:
         """Append content to an existing file with security checks."""
-        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
-        from coding_agent.performance import invalidate_file_cache
+        from codeius.utils.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from codeius.core.performance import invalidate_file_cache
 
         # Use error handler validation
         validation_response = validate_file_path(file_path)
@@ -257,8 +257,8 @@ class FileOps:
 
     def delete_file(self, file_path: str) -> Union[bool, str]:
         """Delete a file with security checks."""
-        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
-        from coding_agent.performance import invalidate_file_cache
+        from codeius.utils.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from codeius.core.performance import invalidate_file_cache
 
         # Use error handler validation
         validation_response = validate_file_path(file_path)
@@ -328,7 +328,7 @@ class FileOps:
 
     def create_directory(self, dir_path: str) -> Union[bool, str]:
         """Create a directory with security checks."""
-        from coding_agent.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
+        from codeius.utils.error_handler import validate_file_path, handle_error, handle_success, ErrorCode
 
         # Use error handler validation
         validation_response = validate_file_path(dir_path)

@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import ast
 import re
-from coding_agent.performance import FileOperationCache, generate_cache_key
-from coding_agent.logger import agent_logger
+from codeius.core.performance import FileOperationCache, generate_cache_key
+from codeius.utils.logger import agent_logger
 
 
 @dataclass

@@ -3,9 +3,9 @@ Conversation management service for the CodingAgent.
 Separates the conversation handling logic from the main agent class.
 """
 from typing import Dict, Any, List, Optional
-from coding_agent.history_manager import HistoryManager
-from coding_agent.config import config_manager
-from coding_agent.logger import agent_logger
+from codeius.core.history_manager import HistoryManager
+from codeius.config import config_manager
+from codeius.utils.logger import agent_logger
 
 
 class ConversationManager:

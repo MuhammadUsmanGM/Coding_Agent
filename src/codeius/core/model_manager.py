@@ -3,13 +3,13 @@ Model management service for the CodingAgent.
 Separates the model switching and management logic from the main agent class.
 """
 from typing import Dict, Any, Optional
-from coding_agent.provider.multiprovider import MultiProvider
-from coding_agent.provider.groq import GroqProvider
-from coding_agent.provider.google import GoogleProvider
-from coding_agent.provider.mcp import MCPProvider
-from coding_agent.provider.custom import CustomProvider
-from coding_agent.mcp_manager import mcp_manager
-from coding_agent.custom_model_manager import custom_model_manager
+from codeius.provider.multiprovider import MultiProvider
+from codeius.provider.groq import GroqProvider
+from codeius.provider.google import GoogleProvider
+from codeius.provider.mcp import MCPProvider
+from codeius.provider.custom import CustomProvider
+from codeius.core.mcp_manager import mcp_manager
+from codeius.core.custom_model_manager import custom_model_manager
 
 
 class ModelManager:

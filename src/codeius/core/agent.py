@@ -3,18 +3,18 @@ Main agent class for the Codeius AI Coding Agent.
 Orchestrates all services to provide an intelligent coding assistant.
 """
 from typing import Dict, Any, List, Optional, Tuple
-from coding_agent.model_manager import ModelManager
-from coding_agent.conversation_manager import ConversationManager
-from coding_agent.action_executor import ActionExecutor
-from coding_agent.plugin_manager import plugin_manager
-from coding_agent.config import config_manager
-from coding_agent.logger import agent_logger
-from coding_agent.provider.mcp import MCPProvider
-from coding_agent.custom_model_manager import custom_model_manager
-from coding_agent.context_manager import ContextManager
-from coding_agent.security_manager import SecurityScanner, security_scanner, security_policy_manager
-from coding_agent.visualization_manager import VisualizationManager
-from coding_agent.performance import perf_monitor
+from codeius.core.model_manager import ModelManager
+from codeius.core.conversation_manager import ConversationManager
+from codeius.core.action_executor import ActionExecutor
+from codeius.core.plugin_manager import plugin_manager
+from codeius.config import config_manager
+from codeius.utils.logger import agent_logger
+from codeius.provider.mcp import MCPProvider
+from codeius.core.custom_model_manager import custom_model_manager
+from codeius.core.context_manager import ContextManager
+from codeius.core.security_manager import SecurityScanner, security_scanner, security_policy_manager
+from codeius.core.visualization_manager import VisualizationManager
+from codeius.core.performance import perf_monitor
 from dotenv import load_dotenv
 import time
 import os

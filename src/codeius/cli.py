@@ -6,10 +6,10 @@ import time
 import shutil
 from threading import Thread
 from typing import Generator
-from coding_agent.agent import CodingAgent
-from coding_agent.dashboard import Dashboard
-from coding_agent.context_manager import ContextManager
-from coding_agent.context_cli import (
+from codeius.core.agent import CodingAgent
+from codeius.core.dashboard import Dashboard
+from codeius.core.context_manager import ContextManager
+from codeius.core.context_cli import (
     display_context_summary,
     semantic_search_command,
     show_file_context,
@@ -17,7 +17,7 @@ from coding_agent.context_cli import (
     find_element_command,
     auto_detect_project_command
 )
-from coding_agent.security_cli import (
+from codeius.core.security_cli import (
     run_security_scan,
     show_security_policy,
     update_security_policy,
@@ -26,8 +26,8 @@ from coding_agent.security_cli import (
     run_vulnerability_scan,
     run_policy_check
 )
-from coding_agent.visualization_manager import VisualizationManager
-from coding_agent.project_analyzer import analyze_current_project
+from codeius.core.visualization_manager import VisualizationManager
+from codeius.core.project_analyzer import analyze_current_project
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.text import Text
@@ -782,7 +782,7 @@ def show_performance_dashboard():
     console.print("[bold blue]📊 Generating performance dashboard...[/bold blue]")
     try:
         # In a real implementation, this would be generated from live data
-        from coding_agent.performance import PERF_MONITOR_FILE, PerformanceMonitor
+        from codeius.core.performance import PERF_MONITOR_FILE, PerformanceMonitor
         import pickle
         if not PERF_MONITOR_FILE.exists():
             console.print("[bold yellow]No performance data available yet.[/bold yellow]")

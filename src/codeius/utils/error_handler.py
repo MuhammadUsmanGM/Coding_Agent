@@ -5,7 +5,7 @@ Provides consistent error handling across the application.
 from typing import Any, Union, Optional
 from enum import Enum
 from dataclasses import dataclass
-from coding_agent.logger import agent_logger
+from codeius.utils.logger import agent_logger
 
 
 class ErrorCode(Enum):

@@ -8,8 +8,8 @@ import time
 from typing import Any, Optional, Dict
 from functools import wraps
 from datetime import datetime, timedelta
-from coding_agent.config import config_manager
-from coding_agent.logger import agent_logger
+from codeius.config import config_manager
+from codeius.utils.logger import agent_logger
 from pathlib import Path
 import pickle
 import atexit

@@ -4,7 +4,7 @@ import os
 import requests
 from typing import Dict, Any, Optional
 from .base import ProviderBase
-from coding_agent.performance import rate_limit
+from codeius.core.performance import rate_limit
 
 class CustomProvider(ProviderBase):
     def __init__(self, name: str, api_key: str, base_url: str, model: str):

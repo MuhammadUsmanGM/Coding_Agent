@@ -2,14 +2,7 @@
 """
 Test script to validate visualization features in Codeius AI Coding Agent
 """
-import sys
-import os
-from pathlib import Path
-
-# Add the src directory to the Python path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
-
-from coding_agent.visualization_manager import VisualizationManager
+from codeius.core.visualization_manager import VisualizationManager
 
 def test_visualization_features():
     """Test all visualization features"""
