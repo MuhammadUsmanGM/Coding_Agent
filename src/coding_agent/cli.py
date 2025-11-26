@@ -837,9 +837,340 @@ def display_help():
 
 def display_welcome_screen():
     """Display a cleaner welcome screen with project info and instructions"""
-    # Display beautiful ASCII art for CODEIUS with improved font
-    ascii_art = pyfiglet.figlet_format("CODEIUS", font="slant")
-    console.print(f"[bold #8A2BE2]{ascii_art}[/bold #8A2BE2]")  # Deep purple color
+
+    # Import the bulletproof header implementation
+    import sys
+    import io
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.text import Text
+    from rich.table import Table
+    from rich.align import Align
+    import platform
+    from datetime import datetime
+    import shutil
+
+    # BULLETPROOF UTF-8 ENCODING FIX FOR WINDOWS
+    if sys.platform == 'win32':
+        try:
+            # Method 1: Reconfigure stdout/stderr
+            sys.stdout.reconfigure(encoding='utf-8')
+            sys.stderr.reconfigure(encoding='utf-8')
+        except AttributeError:
+            # Method 2: Wrap with TextIOWrapper (older Python versions)
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+    # Initialize console with forced unicode
+    console = Console(force_terminal=True, force_interactive=False)
+
+    def can_use_unicode():
+        """Check if terminal supports Unicode"""
+        try:
+            # Test if we can encode Unicode block character
+            '█'.encode(sys.stdout.encoding or 'utf-8')
+            return True
+        except (UnicodeEncodeError, AttributeError):
+            return False
+
+    def get_terminal_width():
+        """Get terminal width safely"""
+        try:
+            return shutil.get_terminal_size().columns
+        except:
+            return 100
+
+    def create_ascii_letters():
+        """ASCII-only fallback letters"""
+        letters = {
+            'C': [
+                "######",
+                "##    ",
+                "##    ",
+                "##    ",
+                "##    ",
+                "##    ",
+                "######"
+            ],
+            'O': [
+                "######",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "######"
+            ],
+            'D': [
+                "##### ",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##### "
+            ],
+            'E': [
+                "######",
+                "##    ",
+                "##    ",
+                "##### ",
+                "##    ",
+                "##    ",
+                "######"
+            ],
+            'I': [
+                "######",
+                "  ##  ",
+                "  ##  ",
+                "  ##  ",
+                "  ##  ",
+                "  ##  ",
+                "######"
+            ],
+            'U': [
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "##  ##",
+                "######"
+            ],
+            'S': [
+                "######",
+                "##    ",
+                "##    ",
+                "######",
+                "    ##",
+                "    ##",
+                "######"
+            ]
+        }
+        return letters, '#'
+
+    def create_unicode_letters():
+        """Unicode block letters"""
+        letters = {
+            'C': [
+                "██████",
+                "██    ",
+                "██    ",
+                "██    ",
+                "██    ",
+                "██    ",
+                "██████"
+            ],
+            'O': [
+                "██████",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██████"
+            ],
+            'D': [
+                "█████ ",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "█████ "
+            ],
+            'E': [
+                "██████",
+                "██    ",
+                "██    ",
+                "█████ ",
+                "██    ",
+                "██    ",
+                "██████"
+            ],
+            'I': [
+                "██████",
+                "  ██  ",
+                "  ██  ",
+                "  ██  ",
+                "  ██  ",
+                "  ██  ",
+                "██████"
+            ],
+            'U': [
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██  ██",
+                "██████"
+            ],
+            'S': [
+                "██████",
+                "██    ",
+                "██    ",
+                "██████",
+                "    ██",
+                "    ██",
+                "██████"
+            ]
+        }
+        return letters, '█'
+
+    def create_logo_letters():
+        """Create CODEIUS letters with proper encoding detection"""
+        use_unicode = can_use_unicode()
+
+        if use_unicode:
+            letters, block = create_unicode_letters()
+        else:
+            letters, block = create_ascii_letters()
+
+        word = "CODEIUS"
+        spacing = "  "
+
+        combined_lines = []
+        for row in range(7):
+            line = ""
+            for i, char in enumerate(word):
+                line += letters[char][row]
+                if i < len(word) - 1:
+                    line += spacing
+            combined_lines.append(line)
+
+        return combined_lines, block, use_unicode
+
+    def apply_gradient(text_lines, block_char):
+        """Apply gradient coloring"""
+        gradient_colors = [
+            "#9D00FF", "#B100FF", "#C400FF", "#E100FF",
+            "#FF00EA", "#FF00C8", "#FF0099", "#FF0066",
+            "#00F0FF", "#00D4FF", "#00B8FF", "#0099FF",
+        ]
+
+        combined_text = "\n".join(text_lines)
+        gradient_text = Text()
+
+        char_count = 0
+        total_chars = sum(1 for char in combined_text if char in (block_char, '█', '#'))
+
+        for char in combined_text:
+            if char in (block_char, '█', '#'):
+                color_index = int((char_count / max(total_chars, 1)) * (len(gradient_colors) - 1))
+                gradient_text.append(char, style=f"bold {gradient_colors[color_index]}")
+                char_count += 1
+            else:
+                gradient_text.append(char)
+
+        return gradient_text
+
+    def safe_print_unicode(text, fallback_text=None):
+        """Safely print Unicode with fallback"""
+        try:
+            console.print(text)
+        except UnicodeEncodeError:
+            if fallback_text:
+                console.print(fallback_text)
+            else:
+                console.print(str(text).encode('ascii', 'replace').decode('ascii'))
+
+    def display_header():
+        """Display bulletproof header"""
+
+        console.clear()
+        term_width = get_terminal_width()
+
+        # Create letters with encoding detection
+        letter_lines, block_char, use_unicode = create_logo_letters()
+
+        # Apply gradient
+        gradient_art = apply_gradient(letter_lines, block_char)
+
+        # Check if art fits
+        art_width = len(letter_lines[0])
+
+        try:
+            if art_width + 20 > term_width:
+                # Too narrow - simple title
+                console.print()
+                title = Text("CODEIUS", style="bold bright_magenta")
+                safe_print_unicode(Align.center(title))
+                console.print()
+            else:
+                # Full art panel
+                panel_content = Text()
+                panel_content.append("\n")
+                panel_content.append(gradient_art)
+                panel_content.append("\n")
+
+                main_panel = Panel(
+                    Align.center(panel_content),
+                    border_style="bold bright_magenta",
+                    padding=(1, 4),
+                )
+
+                safe_print_unicode(main_panel)
+        except Exception as e:
+            # Ultimate fallback
+            console.print("\n[bold bright_magenta]CODEIUS[/bold bright_magenta]\n")
+
+        # Subtitle (safe emojis)
+        try:
+            subtitle = Text("* ", style="bold #FF00FF")
+            subtitle.append("AI-POWERED CODING AGENT", style="bold italic bright_yellow")
+            subtitle.append(" *", style="bold #00F0FF")
+            safe_print_unicode(Align.center(subtitle))
+        except:
+            console.print("[bold bright_yellow]AI-POWERED CODING AGENT[/bold bright_yellow]")
+
+        # Tagline (ASCII-safe symbols)
+        try:
+            tagline = Text("> ", style="bold bright_cyan")
+            tagline.append("CODE SMARTER • BUILD FASTER • SHIP BETTER", style="bold bright_white")
+            tagline.append(" <", style="bold bright_cyan")
+            safe_print_unicode(Align.center(tagline))
+        except:
+            console.print("[bright_white]CODE SMARTER - BUILD FASTER - SHIP BETTER[/bright_white]")
+
+        console.print()
+
+        # System info with safe output
+        try:
+            system_info = Table.grid(padding=(0, 2))
+            system_info.add_column(style="bold #FF00FF", justify="right")
+            system_info.add_column(style="bold bright_white")
+
+            system_info.add_row("SYSTEM", platform.system())
+            system_info.add_row("PYTHON", f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+            system_info.add_row("TIME", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            system_info.add_row("STATUS", Text("ONLINE", style="bold bright_green"))
+
+            info_panel = Panel(
+                system_info,
+                title="[bold #00F0FF]SYSTEM STATUS[/bold #00F0FF]",
+                border_style="bright_cyan",
+                padding=(0, 1),
+            )
+            safe_print_unicode(Align.center(info_panel))
+        except Exception as e:
+            console.print(f"[bright_cyan]System: {platform.system()} | Python: {sys.version_info.major}.{sys.version_info.minor}[/bright_cyan]")
+
+        console.print()
+
+        # Ready indicator
+        try:
+            ready_text = Text(">> ", style="bold bright_green")
+            ready_text.append("READY TO CODE", style="bold bright_green")
+            ready_text.append(" <<", style="bold bright_green")
+            safe_print_unicode(Align.center(ready_text))
+        except:
+            console.print("[bold bright_green]READY TO CODE[/bold bright_green]")
+
+        console.print()
+
+    # Display the bulletproof header
+    display_header()
 
     # Check if API keys are set and show warning if not
     import os
