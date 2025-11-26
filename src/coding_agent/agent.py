@@ -19,7 +19,12 @@ from dotenv import load_dotenv
 import time
 import os
 import pathlib
+from cachetools import cached, TTLCache
+
 load_dotenv()
+
+# Create a cache object with a TTL of 5 minutes
+cache = TTLCache(maxsize=100, ttl=300)
 
 class CodingAgent:
     """
@@ -167,6 +172,7 @@ class CodingAgent:
             "If only a conversation or non-code answer is needed, reply conversationally."
         )
 
+    @cached(cache)
     def ask(self, prompt: str, max_tokens: Optional[int] = None) -> str:
         """
         Process user input and return agent response.
