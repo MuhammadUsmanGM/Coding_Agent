@@ -1749,7 +1749,55 @@ def _(event):
     else:
         event.app.exit(result="")
 
+def init_command():
+    """Command to initialize the agent with API keys."""
+    console.print("[bold green]Welcome to the Codeius AI Coding Agent setup![/bold green]")
+    console.print("Let's set up your API keys.")
+
+    if os.path.exists('.env'):
+        overwrite = Prompt.ask(
+            "[bold yellow]A .env file already exists. Do you want to overwrite it?[/bold yellow]",
+            choices=["y", "n"],
+            default="n"
+        )
+        if overwrite.lower() != 'y':
+            console.print("[bold red]Setup cancelled.[/bold red]")
+            return
+
+    api_choice = Prompt.ask(
+        "Which API do you want to set up?",
+        choices=["Google", "Groq", "Custom"],
+        default="Google"
+    )
+
+    env_vars = {}
+    if api_choice == "Google":
+        api_key = Prompt.ask("Enter your Google API Key")
+        env_vars["GOOGLE_API_KEY"] = api_key
+    elif api_choice == "Groq":
+        api_key = Prompt.ask("Enter your Groq API Key")
+        env_vars["GROQ_API_KEY"] = api_key
+    elif api_choice == "Custom":
+        name = Prompt.ask("Enter a name for your custom model")
+        api_key = Prompt.ask("Enter the API Key for your custom model")
+        model = Prompt.ask("Enter the model name")
+        base_url = Prompt.ask("Enter the base URL for the API")
+        env_vars[f"CUSTOM_MODEL_{name.upper()}_API_KEY"] = api_key
+        env_vars[f"CUSTOM_MODEL_{name.upper()}_MODEL"] = model
+        env_vars[f"CUSTOM_MODEL_{name.upper()}_BASE_URL"] = base_url
+
+    with open('.env', 'w') as f:
+        for key, value in env_vars.items():
+            f.write(f"{key}={value}\n")
+
+    console.print("[bold green]Successfully created .env file![/bold green]")
+
+
 def main():
+    if '--init' in sys.argv:
+        init_command()
+        sys.exit(0)
+
     global first_ctrl_c_time  # Use the global variable to track Ctrl+C presses
     display_welcome_screen()
     apply_theme(current_theme_name) # Apply the default theme at startup
