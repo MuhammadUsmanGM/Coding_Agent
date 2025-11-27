@@ -1495,6 +1495,49 @@ def show_loading_animation(stop_event):
     sys.stdout.write('\r')  # Clear the loading message
     sys.stdout.flush()
 
+
+def show_dynamic_loading_animation(stop_event):
+    """Show a dynamic loading animation with text that changes every 10 seconds"""
+    import random
+
+    # Different phrases to display during processing
+    phrases = [
+        "Thinking...",
+        "Processing your query...",
+        "Analyzing your code...",
+        "Consulting documentation...",
+        "Generating response...",
+        "Searching for answers...",
+        "Compiling thoughts...",
+        "Fetching information...",
+        "Running analysis...",
+        "Calculating best response...",
+        "Evaluating possibilities...",
+        "Building solution...",
+        "Refining output...",
+        "Cross-referencing sources..."
+    ]
+
+    current_phrase = random.choice(phrases)
+    symbols = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']  # Spinning animation
+    i = 0
+    start_time = time.time()
+
+    while not stop_event.is_set():
+        # Change the phrase every 10 seconds
+        if time.time() - start_time >= 10:
+            start_time = time.time()
+            current_phrase = random.choice(phrases)
+
+        # Use sys.stdout for direct output without Rich formatting to avoid conflicts
+        sys.stdout.write(f'\r{symbols[i % len(symbols)]} {current_phrase}')
+        sys.stdout.flush()
+        i += 1
+        time.sleep(0.1)
+
+    sys.stdout.write('\r')  # Clear the loading message
+    sys.stdout.flush()
+
 def show_processing_progress(description="Processing"):
     """Show a progress bar for longer operations"""
     with Progress(
@@ -2181,8 +2224,21 @@ def main():
                 execute_shell_command_safe(prompt)
                 continue
 
-            # Process the prompt with the agent
-            result = agent.ask(prompt)
+            # Process the prompt with the agent, showing dynamic loading animation
+            import threading
+            stop_event = threading.Event()
+            loading_thread = threading.Thread(target=show_dynamic_loading_animation, args=(stop_event,))
+            loading_thread.start()
+
+            try:
+                result = agent.ask(prompt)
+            finally:
+                # Stop the loading animation
+                stop_event.set()
+                loading_thread.join()
+                sys.stdout.write('\n')  # Add a newline after the loading animation stops
+                sys.stdout.flush()
+
             console.print(Panel(result, title="[bold #BA55D3]Codeius Agent Response[/bold #BA55D3]", border_style="#BA55D3", expand=False))
         except KeyboardInterrupt:
             import time
