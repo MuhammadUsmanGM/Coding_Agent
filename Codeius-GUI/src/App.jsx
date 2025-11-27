@@ -577,6 +577,7 @@ function App() {
           </button>
           <div className="chat-title">
             <div className="logo-small" title="Codeius Logo"></div>
+            <span>Codeius AI</span>
           </div>
           <div className="header-actions">
             <button
@@ -593,9 +594,6 @@ function App() {
             >
               📜
             </button>
-            <button className="control-btn">−</button>
-            <button className="control-btn">□</button>
-            <button className="control-btn">×</button>
           </div>
         </header>
 
