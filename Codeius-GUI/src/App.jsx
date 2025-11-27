@@ -577,7 +577,25 @@ function App() {
           </button>
           <div className="chat-title">
             <div className="logo-small" title="Codeius Logo"></div>
-            <span>Codeius Assistant</span>
+          </div>
+          <div className="header-actions">
+            <button
+              className="settings-btn"
+              onClick={() => setShowSettings(true)}
+              title="Settings"
+            >
+              ⚙️
+            </button>
+            <button
+              className="history-btn"
+              onClick={() => setShowHistory(true)}
+              title="History"
+            >
+              📜
+            </button>
+            <button className="control-btn">−</button>
+            <button className="control-btn">□</button>
+            <button className="control-btn">×</button>
           </div>
         </header>
 
