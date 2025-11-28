@@ -649,7 +649,26 @@ body {
   scrollbar-width: none;
   background: linear-gradient(160deg, #0f2027 0%, #203a43 40%, #2c5364 100%);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  scrollbar-width: thin;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: rgba(100, 149, 237, 0.5);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 149, 237, 0.8);
 }
 
 /* Background Logo Element */
@@ -676,28 +695,30 @@ body {
 }
 
 .message {
-  max-width: 85%;
-  padding: 1.2rem;
-  border-radius: 20px;
+  max-width: 80%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 18px;
   position: relative;
   animation: slideIn 0.3s ease-out;
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible to fix text cutoff */
+  word-wrap: break-word;
+  line-height: 1.5;
   z-index: 2; /* Ensure messages appear above the background logo */
 }
 
 .message:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 
 .message.user {
   background: var(--user-message-bg);
   align-self: flex-end;
-  border-bottom-right-radius: 8px;
+  border-bottom-right-radius: 5px;
   color: white;
   margin-left: auto;
 }
@@ -705,7 +726,7 @@ body {
 .message.ai {
   background: var(--ai-message-bg);
   align-self: flex-start;
-  border-bottom-left-radius: 8px;
+  border-bottom-left-radius: 5px;
   color: var(--text-primary);
   margin-right: auto;
   position: relative;
