@@ -16,14 +16,28 @@
 .nav-content {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.nav-settings {
+  flex: 0 0 auto; /* Don't let it grow or shrink */
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto; /* Keep logo fixed size */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-spacer {
+  flex: 0 0 40px; /* Spacer to balance the settings button */
 }
 
 .logo-icon {
