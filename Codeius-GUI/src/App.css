@@ -65,20 +65,16 @@ body.sidebar-open .chat-bubbles-container {
 /* Chat bubbles container */
 .chat-bubbles-container {
   position: absolute;
-  top: 70px; /* Account for navbar height */
+  top: 100px; /* Increased to 100px to give more space below navbar */
   left: 0;
   width: 100%;
-  height: calc(100vh - 140px); /* Account for navbar and input field */
-  padding: 20px 20px; /* Ensure padding on both sides */
+  height: 300px; /* Fixed height to show approximately 5 messages */
+  padding: 20px 20px 80px 20px; /* Adjusted bottom padding to account for input field */
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   z-index: 10; /* Lower than sidebar but higher than background */
   pointer-events: none; /* Allow clicks to pass through to background */
-}
-
-.chat-bubbles-container > * {
-  pointer-events: auto; /* Re-enable pointer events for chat bubbles */
 }
 
 /* Scrollbar styling for chat container */
@@ -98,6 +94,16 @@ body.sidebar-open .chat-bubbles-container {
 
 .chat-bubbles-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(rgba(0, 198, 255, 0.5), rgba(0, 114, 255, 0.5));
+}
+
+/* Firefox scrollbar styling */
+.chat-bubbles-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 114, 255, 0.5) rgba(0, 0, 0, 0.1);
+}
+
+.chat-bubbles-container > * {
+  pointer-events: auto; /* Re-enable pointer events for chat bubbles */
 }
 
 /* Responsive: adjust sidebar effect on smaller screens */
@@ -124,7 +130,7 @@ body.sidebar-open .chat-bubbles-container {
   }
 
   .chat-bubbles-container {
-    height: calc(100vh - 160px); /* Adjust for mobile */
-    padding: 15px 10px; /* Ensure padding on both sides */
+    height: 280px; /* Adjust height for mobile */
+    padding: 15px 10px 60px 10px; /* Ensure padding on both sides */
   }
 }
