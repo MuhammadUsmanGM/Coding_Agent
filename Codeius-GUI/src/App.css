@@ -74,7 +74,7 @@ body.sidebar-open .chat-bubbles-container {
   flex-direction: column;
   overflow-y: auto;
   z-index: 10; /* Lower than sidebar but higher than background */
-  pointer-events: none; /* Allow clicks to pass through to background */
+  /* Allow scrolling interaction but make bubbles clickable */
 }
 
 /* Scrollbar styling for chat container */
@@ -102,8 +102,12 @@ body.sidebar-open .chat-bubbles-container {
   scrollbar-color: rgba(0, 114, 255, 0.5) rgba(0, 0, 0, 0.1);
 }
 
+.chat-bubbles-container {
+  pointer-events: auto; /* Allow scrolling and interaction */
+}
+
 .chat-bubbles-container > * {
-  pointer-events: auto; /* Re-enable pointer events for chat bubbles */
+  pointer-events: auto; /* Ensure bubbles are clickable */
 }
 
 /* Responsive: adjust sidebar effect on smaller screens */
