@@ -147,13 +147,17 @@ const Sidebar = () => {
     // Set up click handler for backdrop
     const handleClickOutside = (event) => {
       const sidebar = document.querySelector('.sidebar');
+      const inputField = event.target.closest('.input-field') ||
+                        event.target.classList.contains('input-container') ||
+                        event.target.classList.contains('input-field');
 
       if (isOpenRef.current &&
           sidebar &&
           !sidebar.contains(event.target) &&
+          !inputField && // Don't close if clicking on input field
           !event.target.classList.contains('sidebar-backdrop') &&
           !event.target.classList.contains('sidebar-close-btn')) {
-        // Close sidebar if clicked outside
+        // Close sidebar if clicked outside (but not on input field)
         sidebar.classList.remove('open');
         document.body.classList.remove('sidebar-open');
         setIsOpen(false);

@@ -1,0 +1,81 @@
+.chat-bubble {
+  display: flex;
+  margin-bottom: 15px;
+  max-width: 80%;
+  animation: bubbleFadeIn 0.3s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+@keyframes bubbleFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.user-bubble {
+  align-self: flex-end;
+  margin-left: auto;
+  width: fit-content;
+  max-width: 65%; /* Further reduced max-width to ensure more space on the sides */
+  /* Ensure the bubble stays within screen bounds on the right */
+  margin-right: 50px; /* Further increased margin for more prominent spacing */
+  /* Additional constraint to prevent overflow */
+  align-items: flex-end;
+}
+
+.ai-bubble {
+  align-self: flex-start;
+  margin-right: auto;
+  width: fit-content;
+  max-width: 65%; /* Reduced max-width to match user bubbles */
+  /* Ensure the bubble stays within screen bounds on the left */
+  margin-left: 50px; /* Increased margin to match user bubbles */
+  /* Additional constraint to prevent overflow */
+  align-items: flex-start;
+}
+
+.bubble-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.bubble-text {
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 1rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  word-wrap: break-word;
+}
+
+.user-bubble .bubble-text {
+  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.ai-bubble .bubble-text {
+  background: rgba(25, 40, 65, 0.8);
+  color: #e0f7fa;
+  border-bottom-left-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.bubble-timestamp {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.user-bubble .bubble-timestamp {
+  text-align: right;
+  padding-right: 2px;
+}
+
+.ai-bubble .bubble-timestamp {
+  text-align: left;
+  padding-left: 2px;
+}
