@@ -6,6 +6,19 @@
   width: 90%;
   max-width: 700px;
   z-index: 9998;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Adjust input field position when sidebar is open */
+body.sidebar-open .input-container {
+  transform: translateX(calc(-50% + 150px)); /* Move input field to the right by half of the sidebar width */
+}
+
+/* Responsive: don't adjust on smaller screens where sidebar covers the whole width */
+@media (max-width: 768px) {
+  body.sidebar-open .input-container {
+    transform: translateX(-50%);
+  }
 }
   
   .input-field {
