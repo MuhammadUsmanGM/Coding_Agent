@@ -51,9 +51,10 @@ body.sidebar-open .App {
   margin-left: 300px;
 }
 
-/* Ensure no overflow when sidebar is open */
-body.sidebar-open {
-  overflow: hidden;
+/* Adjust chat bubbles container when sidebar is open to maintain proper spacing */
+body.sidebar-open .chat-bubbles-container {
+  left: 0;
+  width: calc(100% - 300px); /* Shrink width to account for sidebar */
 }
 
 /* Remove any potential blur effects */
