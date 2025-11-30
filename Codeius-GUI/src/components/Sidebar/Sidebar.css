@@ -263,7 +263,9 @@
   justify-content: center;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-
+  flex-direction: column; /* Stack the lines vertically */
+  gap: 5px; /* Space between lines */
+  padding: 0; /* Remove any default padding */
 }
 
 .sidebar-toggle:hover {
@@ -279,6 +281,96 @@
   background: rgba(200, 50, 50, 0.8);
   color: white;
   z-index: 9999;
+}
+
+/* Style for the hamburger lines in the edge trigger */
+.sidebar-edge-trigger {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  width: 40px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(10, 25, 47, 0.8), rgba(26, 54, 93, 0.9));
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  z-index: 9996;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* Ensure the button can receive mouse events */
+}
+
+.sidebar-edge-trigger:hover {
+  background: linear-gradient(135deg, rgba(30, 50, 80, 0.9), rgba(50, 80, 120, 0.9));
+  transform: translateY(-50%) translateX(0);
+  box-shadow: 8px 0 20px rgba(0, 114, 255, 0.5);
+}
+
+.trigger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  border-radius: 2px;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* Hover animations for the trigger lines */
+.sidebar-edge-trigger:hover .trigger-line:nth-child(1) {
+  transform: translateX(5px) scaleX(0.8);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+.sidebar-edge-trigger:hover .trigger-line:nth-child(2) {
+  transform: scaleX(1.2);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+.sidebar-edge-trigger:hover .trigger-line:nth-child(3) {
+  transform: translateX(3px) scaleX(0.9);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+/* Click animations for the trigger lines */
+.sidebar-edge-trigger:active .trigger-line:nth-child(1),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+  width: 22px;
+}
+
+.sidebar-edge-trigger:active .trigger-line:nth-child(2),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+
+.sidebar-edge-trigger:active .trigger-line:nth-child(3),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+  width: 22px;
+}
+
+/* Make sure the trigger becomes an X when sidebar is open */
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+  width: 22px;
+}
+
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+  width: 22px;
 }
 
 /* Scrollbar styling */
