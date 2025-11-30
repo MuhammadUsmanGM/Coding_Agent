@@ -88,6 +88,23 @@ const Sidebar = () => {
     isOpenRef.current = false;
   };
 
+  // Function to handle command click and pass it to input
+  const handleCommandClick = (commandText) => {
+    // Find the input field and set its value
+    const inputField = document.querySelector('.input-field');
+    if (inputField) {
+      // Set the value to the clicked command
+      inputField.value = commandText;
+
+      // Trigger the input event to update the React state
+      const event = new Event('input', { bubbles: true });
+      inputField.dispatchEvent(event);
+
+      // Optionally, you could also focus on the input field
+      inputField.focus();
+    }
+  };
+
   useEffect(() => {
     // Update ref when state changes
     isOpenRef.current = isOpen;
@@ -192,7 +209,12 @@ const Sidebar = () => {
         <div className="sidebar-content">
           <div className="commands-list">
             {commands.map((command, index) => (
-              <div key={index} className="command-item">
+              <div
+                key={index}
+                className="command-item"
+                onClick={() => handleCommandClick(command.cmd)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="command-header">
                   <span className="command-cmd">{command.cmd}</span>
                 </div>
