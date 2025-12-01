@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import ChatBubble from './components/ChatBubble/ChatBubble'
 import HistoryModal from './components/HistoryModal/HistoryModal';
 import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts';
+import GitControls from './components/GitControls/GitControls';
 import { saveSessionMessages, getSessionMessages, getCurrentSessionId, loadMessages } from './utils/localStorage'
 import { useToast, ToastProvider } from './components/Toast/ToastContainer';
 import ConfirmationDialog from './components/ConfirmationDialog/ConfirmationDialog';
@@ -256,6 +257,9 @@ function AppContent() {
         currentModel={currentModel}
       />
       <Sidebar />
+      <div className="git-controls-container">
+        <GitControls />
+      </div>
       {/* Chat bubbles appear on the background */}
       <div className="chat-bubbles-container" ref={chatContainerRef}>
         {messages.map((message) => (

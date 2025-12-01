@@ -66,6 +66,8 @@ class MCPProvider(ProviderBase):
                 return self._config_manager_server(messages)
             elif self.server_name == "task_scheduler":
                 return self._task_scheduler_server(messages)
+            elif self.server_name == "git":
+                return self._git_server(messages)
             else:
                 return self._default_server_interaction(messages)
         except Exception as e:
@@ -478,6 +480,225 @@ class MCPProvider(ProviderBase):
         else:
             return f"Task scheduler server received: {last_message[:100]}... (schedule/task)"
     
+    def _git_server(self, messages):
+        """Handle git version control requests"""
+        last_message = messages[-1]["content"] if messages else ""
+
+        # Look for keywords that suggest a git operation request
+        if any(word in last_message.lower() for word in ["git", "push", "pull", "commit", "add", "status", "branch", "clone", "log", "diff", "remote", "init"]):
+            try:
+                # Parse the git command from the message
+                # This is a simplified approach - in reality, more sophisticated parsing would be needed
+                lower_msg = last_message.lower()
+
+                if "push" in lower_msg:
+                    # Extract any remote/branch info if present
+                    remote = "origin"  # default
+                    branch = "main"    # default
+
+                    # Simple extraction of remote and branch if mentioned
+                    import re
+                    remote_match = re.search(r"to\s+(\w+)", lower_msg) or re.search(r"origin\s+(\w+)", lower_msg)
+                    if remote_match:
+                        remote = remote_match.group(1)
+
+                    branch_match = re.search(r"branch\s+(\w+)", lower_msg) or re.search(r"to\s+\w+\s+(\w+)", lower_msg)
+                    if branch_match:
+                        branch = branch_match.group(1)
+
+                    response = requests.post(
+                        f"{self.server_config.endpoint}/push",
+                        json={"remote": remote, "branch": branch},
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return f"Git push successful:\n{result.get('output', 'Push completed')}"
+                        else:
+                            return f"Git push failed: {result.get('error', 'Unknown error')}"
+                    else:
+                        return f"Error during git push: {response.status_code} - {response.text}"
+
+                elif "pull" in lower_msg:
+                    # Extract any remote/branch info if present
+                    remote = "origin"  # default
+                    branch = "main"    # default
+
+                    import re
+                    remote_match = re.search(r"from\s+(\w+)", lower_msg)
+                    if remote_match:
+                        remote = remote_match.group(1)
+
+                    branch_match = re.search(r"branch\s+(\w+)", lower_msg)
+                    if branch_match:
+                        branch = branch_match.group(1)
+
+                    response = requests.post(
+                        f"{self.server_config.endpoint}/pull",
+                        json={"remote": remote, "branch": branch},
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return f"Git pull successful:\n{result.get('output', 'Pull completed')}"
+                        else:
+                            return f"Git pull failed: {result.get('error', 'Unknown error')}"
+                    else:
+                        return f"Error during git pull: {response.status_code} - {response.text}"
+
+                elif "status" in lower_msg:
+                    response = requests.get(f"{self.server_config.endpoint}/status")
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return f"Git status:\n{result.get('output', 'No output')}"
+                        else:
+                            return f"Git status check failed: {result.get('error', 'Unknown error')}"
+                    else:
+                        return f"Error checking git status: {response.status_code} - {response.text}"
+
+                elif "add" in lower_msg:
+                    # Extract files to add
+                    import re
+                    file_matches = re.findall(r'"([^"]*)"', last_message) or re.findall(r"'([^']*)'", last_message)
+                    if not file_matches:
+                        # If no explicit files, default to adding all changes
+                        files = "."
+                    else:
+                        files = file_matches if len(file_matches) > 1 else file_matches[0]
+
+                    response = requests.post(
+                        f"{self.server_config.endpoint}/add",
+                        json={"files": files},
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return f"Git add successful:\n{result.get('output', 'Files added to staging')}"
+                        else:
+                            return f"Git add failed: {result.get('error', 'Unknown error')}"
+                    else:
+                        return f"Error during git add: {response.status_code} - {response.text}"
+
+                elif "commit" in lower_msg:
+                    # Extract commit message from the message
+                    import re
+                    # Look for patterns like "commit with message 'message'" or "commit 'message'"
+                    msg_match = re.search(r"['\"]([^'\"]+)['\"]", last_message)
+                    if msg_match:
+                        commit_msg = msg_match.group(1)
+                    else:
+                        # If no explicit message, provide a default
+                        commit_msg = "Auto-commit from Codeius AI Agent"
+
+                    response = requests.post(
+                        f"{self.server_config.endpoint}/commit",
+                        json={"message": commit_msg},
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            return f"Git commit successful:\n{result.get('output', 'Changes committed')}"
+                        else:
+                            return f"Git commit failed: {result.get('error', 'Unknown error')}"
+                    else:
+                        return f"Error during git commit: {response.status_code} - {response.text}"
+
+                elif "clone" in lower_msg:
+                    # Extract repository URL from the message
+                    import re
+                    url_pattern = r"(https?://[\w\.-]+\.[\w]+/[\w\.-]+/[\w\.-]+|git@[\w\.-]+:[\w\.-]+/[\w\.-]+\.git)"
+                    url_match = re.search(url_pattern, last_message)
+
+                    if url_match:
+                        repo_url = url_match.group(0)
+
+                        response = requests.post(
+                            f"{self.server_config.endpoint}/clone",
+                            json={"url": repo_url},
+                            timeout=60  # Longer timeout for cloning
+                        )
+                        if response.status_code == 200:
+                            result = response.json()
+                            if result.get("success"):
+                                return f"Git clone successful:\n{result.get('output', f'Repository cloned from {repo_url}')}"
+                            else:
+                                return f"Git clone failed: {result.get('error', 'Unknown error')}"
+                        else:
+                            return f"Error during git clone: {response.status_code} - {response.text}"
+                    else:
+                        return "Could not identify repository URL to clone. Please provide the full Git repository URL."
+
+                elif "branch" in lower_msg:
+                    # Determine if this is a list, create, or switch operation
+                    if "create" in lower_msg or "new" in lower_msg:
+                        # Extract branch name
+                        import re
+                        name_match = re.search(r"(?:create|new)\s+branch\s+([^\s]+)", last_message) or re.search(r"branch\s+([^\s]+)", last_message)
+                        if name_match:
+                            branch_name = name_match.group(1)
+
+                            response = requests.post(
+                                f"{self.server_config.endpoint}/branch",
+                                json={"create": branch_name},
+                                timeout=30
+                            )
+                            if response.status_code == 200:
+                                result = response.json()
+                                if result.get("success"):
+                                    return f"Branch '{branch_name}' created successfully:\n{result.get('output', 'Branch created')}"
+                                else:
+                                    return f"Branch creation failed: {result.get('error', 'Unknown error')}"
+                            else:
+                                return f"Error creating branch: {response.status_code} - {response.text}"
+                        else:
+                            return "Could not identify branch name to create. Please specify the branch name."
+                    elif "switch" in lower_msg or "checkout" in lower_msg:
+                        # Extract branch name
+                        import re
+                        name_match = re.search(r"(?:switch|checkout)\s+(?:to\s+|)([^\s]+)", last_message) or re.search(r"branch\s+([^\s]+)", last_message)
+                        if name_match:
+                            branch_name = name_match.group(1)
+
+                            response = requests.post(
+                                f"{self.server_config.endpoint}/branch",
+                                json={"switch": branch_name},
+                                timeout=30
+                            )
+                            if response.status_code == 200:
+                                result = response.json()
+                                if result.get("success"):
+                                    return f"Switched to branch '{branch_name}':\n{result.get('output', 'Branch switched')}"
+                                else:
+                                    return f"Branch switch failed: {result.get('error', 'Unknown error')}"
+                            else:
+                                return f"Error switching branch: {response.status_code} - {response.text}"
+                        else:
+                            return "Could not identify branch name to switch to. Please specify the branch name."
+                    else:
+                        # Just list branches
+                        response = requests.get(f"{self.server_config.endpoint}/branch")
+                        if response.status_code == 200:
+                            result = response.json()
+                            if result.get("success"):
+                                return f"Git branches:\n{result.get('output', 'No branches found')}"
+                            else:
+                                return f"Branch list failed: {result.get('error', 'Unknown error')}"
+                        else:
+                            return f"Error listing branches: {response.status_code} - {response.text}"
+
+                else:
+                    # Generic git operation - return what the server received
+                    return f"Git server received command: {last_message[:100]}... (unrecognized command pattern)"
+            except Exception as e:
+                return f"Error executing git command: {str(e)}"
+        else:
+            return f"Git server received: {last_message[:100]}... (mention 'git' or a git command to perform version control operations)"
+
     def _default_server_interaction(self, messages):
         """Default interaction for other server types"""
         last_message = messages[-1]["content"] if messages else ""
