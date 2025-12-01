@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Settings from '../Settings/Settings';
 import HistoryIcon from '../HistoryIcon/HistoryIcon';
 import ContextPanel from '../ContextPanel/ContextPanel';
+import ExportMenu from '../ExportMenu/ExportMenu';
 import './Navbar.css';
 
-const Navbar = ({ onOpenHistory, onModelChange, currentModel }) => {
+const Navbar = ({ onOpenHistory, onModelChange, currentModel, user, messages }) => {
   const [showContext, setShowContext] = useState(false);
 
   return (
@@ -17,6 +18,9 @@ const Navbar = ({ onOpenHistory, onModelChange, currentModel }) => {
             <span className="logo-text">Codeius AI</span>
           </div>
           <div className="nav-controls">
+            {messages && messages.length > 0 && (
+              <ExportMenu messages={messages} elementId="chat-container" />
+            )}
             <button className="context-btn" onClick={() => setShowContext(true)} title="View Project Context">
               🧠 Context
             </button>

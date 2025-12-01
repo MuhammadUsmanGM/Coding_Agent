@@ -396,6 +396,31 @@ def get_cwd():
     except Exception as e:
         return jsonify({'error': 'Failed to get CWD', 'details': str(e)}), 500
 
+@app.route('/api/sessions/<session_id>/share', methods=['POST'])
+def share_session(session_id):
+    """Generate a shareable link for a session"""
+    try:
+        # In a real app, we would generate a unique random ID mapped to this session
+        # For now, we'll just use the session_id but mark it as shared in DB
+        # conversation_db.mark_shared(session_id) 
+        
+        # Construct the share URL (assuming frontend handles /share/ route)
+        share_url = f"http://localhost:8090/share/{session_id}"
+        
+        return jsonify({'share_url': share_url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sessions/<session_id>/public', methods=['GET'])
+def get_public_session(session_id):
+    """Get public session data (read-only)"""
+    try:
+        # Check if session is actually shared (omitted for demo)
+        history = conversation_db.get_conversation_history(session_id)
+        return jsonify({'messages': history})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/shell', methods=['POST'])
 def execute_shell():
     """Execute a shell command"""

@@ -301,11 +301,13 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="App">
+    <div className="app-container">
       <Navbar
-        onOpenHistory={openHistoryModal}
+        onOpenHistory={() => setShowHistory(true)}
         onModelChange={handleModelChange}
         currentModel={currentModel}
+        user={user}
+        messages={messages}
       />
       <Sidebar />
       <div className="git-controls-container">
@@ -400,12 +402,22 @@ function AppContent() {
   )
 }
 
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SharedSessionView from './components/SharedSessionView/SharedSessionView';
+
+// ... (AppContent function remains the same)
+
 function App() {
   return (
     <ToastProvider>
-      <AppContent />
+      <Router>
+        <Routes>
+          <Route path="/" element={<AppContent />} />
+          <Route path="/share/:sessionId" element={<SharedSessionView />} />
+        </Routes>
+      </Router>
     </ToastProvider>
   );
 }
 
-export default App
+export default App;

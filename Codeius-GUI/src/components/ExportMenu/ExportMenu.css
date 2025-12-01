@@ -1,0 +1,70 @@
+.export-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.export-button {
+  background: transparent;
+  border: 1px solid #3e3e42;
+  color: #cccccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.export-button:hover {
+  background: #2d2d30;
+  border-color: #007acc;
+  color: #ffffff;
+}
+
+.export-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.export-item {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #cccccc;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.export-item:hover {
+  background: #007acc;
+  color: #ffffff;
+}
+
+.export-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.export-item:hover .export-icon {
+  opacity: 1;
+}
