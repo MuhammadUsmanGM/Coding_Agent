@@ -25,11 +25,11 @@ class AgentConfig:
     google_api_key: str = field(default_factory=lambda: os.getenv("GOOGLE_API_KEY", ""))
     groq_model: str = os.getenv("GROQ_API_MODEL", "llama3-70b-8192")
     google_model: str = os.getenv("GOOGLE_API_MODEL", "gemini-1.5-flash")
-    
+
     # Performance Settings
     max_tokens: int = int(os.getenv("MAX_TOKENS", "2048"))
     conversation_history_limit: int = int(os.getenv("CONVERSATION_HISTORY_LIMIT", "50"))
-    
+
     # File Operation Settings
     allowed_extensions: set = field(default_factory=lambda: {
         '.py', '.js', '.ts', '.jsx', '.tsx', '.html', '.css',
@@ -37,19 +37,24 @@ class AgentConfig:
         '.cfg', '.conf', '.env', '.sql', '.pyi'
     })
     max_file_size_mb: int = int(os.getenv("MAX_FILE_SIZE_MB", "10"))
-    
+
     # Security Settings
     max_concurrent_operations: int = int(os.getenv("MAX_CONCURRENT_OPERATIONS", "5"))
     rate_limit_requests: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
     rate_limit_window_seconds: int = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
-    
+
     # MCP Server Settings
     mcp_server_timeout: int = int(os.getenv("MCP_SERVER_TIMEOUT", "30"))
     mcp_server_retry_attempts: int = int(os.getenv("MCP_SERVER_RETRY_ATTEMPTS", "3"))
-    
+
     # Workspace Settings
     workspace_root: str = os.getenv("WORKSPACE_ROOT", ".")
-    
+
+    # Additional settings from .codeius files
+    enable_security_scanning: bool = bool(os.getenv("ENABLE_SECURITY_SCANNING", "true").lower() in ("true", "1", "yes"))
+    security_scan_on_file_write: bool = bool(os.getenv("SECURITY_SCAN_ON_FILE_WRITE", "false").lower() in ("true", "1", "yes"))
+    default_theme: str = os.getenv("DEFAULT_THEME", "default")
+
     def __post_init__(self):
         """Post-initialization validation."""
         if not self.groq_api_key and not self.google_api_key:
@@ -97,47 +102,70 @@ class SecurityConfig:
 
 class ConfigurationManager:
     """Manages application configuration."""
-    
+
     def __init__(self, config_file: Optional[str] = None):
-        self.config_file = config_file or "config/settings.json"
+        self.config_file = config_file or ".codeius/settings.json"
+        self.global_config_file = Path.home() / ".codeius" / "settings.json"
         self.agent_config = AgentConfig()
         self.ui_config = UIConfig()
         self.security_config = SecurityConfig()
         self._load_config()
-    
+
     def _load_config(self):
-        """Load configuration from file if available."""
+        """Load configuration from both global and local files, with local overriding global."""
+        # Load global config first as defaults
+        self._load_global_config()
+
+        # Then load project-specific config to override global settings
+        self._load_local_config()
+
+    def _load_global_config(self):
+        """Load global configuration from user's home directory."""
+        try:
+            if self.global_config_file.exists():
+                with open(self.global_config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                # Update agent config from global file
+                for key, value in data.items():
+                    if hasattr(self.agent_config, key):
+                        setattr(self.agent_config, key, value)
+
+        except Exception as e:
+            print(f"⚠️ Warning: Could not load global config from {self.global_config_file}: {e}")
+
+    def _load_local_config(self):
+        """Load project-specific configuration."""
         try:
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                
-                # Update agent config from file
-                agent_data = data.get('agent', {})
-                for key, value in agent_data.items():
+
+                # Update agent config from local file
+                for key, value in data.items():
                     if hasattr(self.agent_config, key):
                         setattr(self.agent_config, key, value)
-                
-                # Update UI config from file
+
+                # Update UI config from local file
                 ui_data = data.get('ui', {})
                 for key, value in ui_data.items():
                     if hasattr(self.ui_config, key):
                         setattr(self.ui_config, key, value)
-                
-                # Update security config from file
+
+                # Update security config from local file
                 security_data = data.get('security', {})
                 for key, value in security_data.items():
                     if hasattr(self.security_config, key):
                         setattr(self.security_config, key, value)
-                        
+
         except Exception as e:
-            print(f"⚠️ Warning: Could not load config from {self.config_file}: {e}")
+            print(f"⚠️ Warning: Could not load project config from {self.config_file}: {e}")
     
     def save_config(self):
-        """Save current configuration to file."""
+        """Save current configuration to local file."""
         config_dir = Path(self.config_file).parent
         config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         config_data = {
             'agent': {
                 'groq_model': self.agent_config.groq_model,
@@ -151,6 +179,9 @@ class ConfigurationManager:
                 'mcp_server_timeout': self.agent_config.mcp_server_timeout,
                 'mcp_server_retry_attempts': self.agent_config.mcp_server_retry_attempts,
                 'workspace_root': self.agent_config.workspace_root,
+                'enable_security_scanning': getattr(self.agent_config, 'enable_security_scanning', True),
+                'security_scan_on_file_write': getattr(self.agent_config, 'security_scan_on_file_write', False),
+                'default_theme': getattr(self.agent_config, 'default_theme', 'default'),
             },
             'ui': {
                 'primary_color': self.ui_config.primary_color,
@@ -175,8 +206,33 @@ class ConfigurationManager:
                 'enforce_canonical_paths': self.security_config.enforce_canonical_paths,
             }
         }
-        
+
         with open(self.config_file, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2)
+
+    def save_global_config(self):
+        """Save current configuration to global file."""
+        config_dir = self.global_config_file.parent
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        config_data = {
+            'groq_model': self.agent_config.groq_model,
+            'google_model': self.agent_config.google_model,
+            'max_tokens': self.agent_config.max_tokens,
+            'conversation_history_limit': self.agent_config.conversation_history_limit,
+            'max_file_size_mb': self.agent_config.max_file_size_mb,
+            'max_concurrent_operations': self.agent_config.max_concurrent_operations,
+            'rate_limit_requests': self.agent_config.rate_limit_requests,
+            'rate_limit_window_seconds': self.agent_config.rate_limit_window_seconds,
+            'mcp_server_timeout': self.agent_config.mcp_server_timeout,
+            'mcp_server_retry_attempts': self.agent_config.mcp_server_retry_attempts,
+            'workspace_root': self.agent_config.workspace_root,
+            'enable_security_scanning': getattr(self.agent_config, 'enable_security_scanning', True),
+            'security_scan_on_file_write': getattr(self.agent_config, 'security_scan_on_file_write', False),
+            'default_theme': getattr(self.agent_config, 'default_theme', 'default'),
+        }
+
+        with open(self.global_config_file, 'w', encoding='utf-8') as f:
             json.dump(config_data, f, indent=2)
     
     def get_agent_config(self) -> AgentConfig:

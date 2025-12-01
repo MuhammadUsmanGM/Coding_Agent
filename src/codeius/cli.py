@@ -4,6 +4,8 @@ import sys
 import os
 import time
 import shutil
+import json
+from pathlib import Path
 from threading import Thread
 from typing import Generator
 from codeius.core.agent import CodingAgent
@@ -1793,50 +1795,415 @@ def _(event):
         event.app.exit(result="")
 
 def init_command():
-    """Command to initialize the agent with API keys."""
+    """Command to initialize the agent with API keys and configuration files."""
     console.print("[bold green]Welcome to the Codeius AI Coding Agent setup![/bold green]")
-    console.print("Let's set up your API keys.")
+    console.print("Let's set up your API keys and configuration files.")
 
-    if os.path.exists('.env'):
-        overwrite = Prompt.ask(
+    # Create .codeius directory
+    codeius_dir = Path('.codeius')
+    codeius_dir.mkdir(exist_ok=True)
+
+    console.print(f"[bold green]Created .codeius directory at: {codeius_dir.absolute()}[/bold green]")
+
+    # Check for existing .env before overwriting
+    env_exists = os.path.exists('.env')
+    if env_exists:
+        overwrite_env = Prompt.ask(
             "[bold yellow]A .env file already exists. Do you want to overwrite it?[/bold yellow]",
             choices=["y", "n"],
             default="n"
         )
-        if overwrite.lower() != 'y':
-            console.print("[bold red]Setup cancelled.[/bold red]")
-            return
+        if overwrite_env.lower() != 'y':
+            console.print("[bold yellow].env file kept unchanged.[/bold yellow]")
+        else:
+            api_choice = Prompt.ask(
+                "Which API do you want to set up?",
+                choices=["Google", "Groq", "Custom"],
+                default="Google"
+            )
 
-    api_choice = Prompt.ask(
-        "Which API do you want to set up?",
-        choices=["Google", "Groq", "Custom"],
-        default="Google"
-    )
+            env_vars = {}
+            if api_choice == "Google":
+                api_key = Prompt.ask("Enter your Google API Key")
+                env_vars["GOOGLE_API_KEY"] = api_key
+            elif api_choice == "Groq":
+                api_key = Prompt.ask("Enter your Groq API Key")
+                env_vars["GROQ_API_KEY"] = api_key
+            elif api_choice == "Custom":
+                name = Prompt.ask("Enter a name for your custom model")
+                api_key = Prompt.ask("Enter the API Key for your custom model")
+                model = Prompt.ask("Enter the model name")
+                base_url = Prompt.ask("Enter the base URL for the API")
+                env_vars[f"CUSTOM_MODEL_{name.upper()}_API_KEY"] = api_key
+                env_vars[f"CUSTOM_MODEL_{name.upper()}_MODEL"] = model
+                env_vars[f"CUSTOM_MODEL_{name.upper()}_BASE_URL"] = base_url
 
-    env_vars = {}
-    if api_choice == "Google":
-        api_key = Prompt.ask("Enter your Google API Key")
-        env_vars["GOOGLE_API_KEY"] = api_key
-    elif api_choice == "Groq":
-        api_key = Prompt.ask("Enter your Groq API Key")
-        env_vars["GROQ_API_KEY"] = api_key
-    elif api_choice == "Custom":
-        name = Prompt.ask("Enter a name for your custom model")
-        api_key = Prompt.ask("Enter the API Key for your custom model")
-        model = Prompt.ask("Enter the model name")
-        base_url = Prompt.ask("Enter the base URL for the API")
-        env_vars[f"CUSTOM_MODEL_{name.upper()}_API_KEY"] = api_key
-        env_vars[f"CUSTOM_MODEL_{name.upper()}_MODEL"] = model
-        env_vars[f"CUSTOM_MODEL_{name.upper()}_BASE_URL"] = base_url
+            with open('.env', 'w') as f:
+                for key, value in env_vars.items():
+                    f.write(f"{key}={value}\n")
 
-    with open('.env', 'w') as f:
-        for key, value in env_vars.items():
-            f.write(f"{key}={value}\n")
+            console.print("[bold green]Successfully created .env file![/bold green]")
+    else:
+        api_choice = Prompt.ask(
+            "Which API do you want to set up?",
+            choices=["Google", "Groq", "Custom"],
+            default="Google"
+        )
 
-    console.print("[bold green]Successfully created .env file![/bold green]")
+        env_vars = {}
+        if api_choice == "Google":
+            api_key = Prompt.ask("Enter your Google API Key")
+            env_vars["GOOGLE_API_KEY"] = api_key
+        elif api_choice == "Groq":
+            api_key = Prompt.ask("Enter your Groq API Key")
+            env_vars["GROQ_API_KEY"] = api_key
+        elif api_choice == "Custom":
+            name = Prompt.ask("Enter a name for your custom model")
+            api_key = Prompt.ask("Enter the API Key for your custom model")
+            model = Prompt.ask("Enter the model name")
+            base_url = Prompt.ask("Enter the base URL for the API")
+            env_vars[f"CUSTOM_MODEL_{name.upper()}_API_KEY"] = api_key
+            env_vars[f"CUSTOM_MODEL_{name.upper()}_MODEL"] = model
+            env_vars[f"CUSTOM_MODEL_{name.upper()}_BASE_URL"] = base_url
+
+        with open('.env', 'w') as f:
+            for key, value in env_vars.items():
+                f.write(f"{key}={value}\n")
+
+        console.print("[bold green]Successfully created .env file![/bold green]")
+
+    # Create default configuration files in .codeius directory
+    create_default_config_files(codeius_dir)
+
+    console.print("[bold green]✅ Codeius has been initialized successfully![/bold green]")
+    console.print("[bold]You can now run 'codeius' to start the agent.[/bold]")
+
+
+def create_default_config_files(codeius_dir: Path):
+    """Create default configuration files in the .codeius directory."""
+
+    # Create settings.json with default settings
+    settings_file = codeius_dir / "settings.json"
+    if not settings_file.exists():
+        default_settings = {
+            "max_tokens": 2048,
+            "conversation_history_limit": 50,
+            "max_file_size_mb": 10,
+            "max_concurrent_operations": 5,
+            "rate_limit_requests": 100,
+            "rate_limit_window_seconds": 60,
+            "mcp_server_timeout": 30,
+            "mcp_server_retry_attempts": 3,
+            "workspace_root": ".",
+            "groq_api_model": "llama3-70b-8192",
+            "google_api_model": "gemini-1.5-flash",
+            "enable_security_scanning": True,
+            "security_scan_on_file_write": False,
+            "default_theme": "default"
+        }
+        with open(settings_file, 'w', encoding='utf-8') as f:
+            json.dump(default_settings, f, indent=2)
+        console.print(f"[bold green]Created settings.json[/bold green]")
+
+    # Create default Agent.md file with instructions
+    agent_file = codeius_dir / "Agent.md"
+    if not agent_file.exists():
+        default_agent_instructions = """# Codeius AI Agent Instructions
+
+You are an advanced AI coding assistant named Codeius. You help users with programming tasks by reading and writing files, performing git operations, running tests, searching code, executing shell commands, and conducting web searches.
+
+## Capabilities
+
+- Read and write source files in the workspace
+- Perform git operations (stage, commit)
+- Perform web searches using DuckDuckGo
+- Start and interact with background processes
+- Analyze code for quality, security, and style issues
+- Refactor code when requested
+- Generate documentation
+- Create project scaffolding
+- Manage environment variables
+- Execute shell commands securely
+- Run tests with pytest
+
+## Response Format
+
+When you need to perform actions, respond with JSON in this format:
+
+```json
+{
+  "explanation": "Describe your plan",
+  "actions": [
+    {"type": "read_file", "path": "..."},
+    {"type": "write_file", "path": "...", "content": "..."},
+    {"type": "append_to_file", "path": "...", "content": "..."},
+    {"type": "delete_file", "path": "..."},
+    {"type": "list_files", "pattern": "..."},
+    {"type": "create_directory", "path": "..."},
+    {"type": "git_commit", "message": "..."},
+    {"type": "web_search", "query": "..."},
+    {"type": "analyze_code", "path": "..."},
+    {"type": "start_process", "command": "..."},
+    {"type": "send_input", "pid": 123, "data": "..."},
+    {"type": "read_output", "pid": 123},
+    {"type": "read_error", "pid": 123},
+    {"type": "stop_process", "pid": 123}
+  ]
+}
+```
+
+If only a conversation or non-code answer is needed, reply conversationally.
+"""
+        with open(agent_file, 'w', encoding='utf-8') as f:
+            f.write(default_agent_instructions)
+        console.print(f"[bold green]Created Agent.md[/bold green]")
+
+    # Create default security policy
+    security_policy_file = codeius_dir / "security_policy.yml"
+    if not security_policy_file.exists():
+        default_security_policy = """# Default Security Policy for Codeius AI Coding Agent
+
+secrets_detection_enabled: true
+vulnerability_scanning_enabled: true
+policy_enforcement_enabled: true
+minimum_severity_to_report: medium  # low, medium, high
+
+# Allowed packages (whitelist)
+allowed_packages: []
+
+# Blocked packages (blacklist)
+blocked_packages: []
+
+# Forbidden functions that could be dangerous
+forbidden_functions:
+  - eval
+  - exec
+  - compile
+  - open
+  - input
+
+# Required security headers for web applications
+required_headers:
+  - Content-Security-Policy
+  - X-Frame-Options
+  - X-XSS-Protection
+  - X-Content-Type-Options
+
+# File access restrictions
+file_access:
+  allowed_extensions:
+    - .py
+    - .js
+    - .ts
+    - .tsx
+    - .json
+    - .md
+    - .txt
+    - .yaml
+    - .yml
+    - .html
+    - .css
+    - .xml
+  blocked_paths:
+    - /etc/
+    - /root/
+    - /proc/
+    - /sys/
+"""
+        with open(security_policy_file, 'w', encoding='utf-8') as f:
+            f.write(default_security_policy)
+        console.print(f"[bold green]Created security_policy.yml[/bold green]")
+
+    # Create default project template if needed
+    templates_dir = codeius_dir / "templates"
+    templates_dir.mkdir(exist_ok=True)
+    console.print(f"[bold green]Created templates directory[/bold green]")
+
+    # Create a basic README for the .codeius directory
+    readme_file = codeius_dir / "README.md"
+    if not readme_file.exists():
+        readme_content = """# .codeius Directory
+
+This directory contains configuration files for the Codeius AI Coding Agent.
+
+## Files
+
+- `settings.json` - Agent settings and configuration
+- `Agent.md` - Instructions for the AI agent
+- `security_policy.yml` - Security policy configuration
+- `templates/` - Project templates for scaffolding
+
+## Purpose
+
+This directory provides project-specific configuration for Codeius, allowing you to customize the agent's behavior, security policies, and capabilities for this specific project.
+"""
+        with open(readme_file, 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+        console.print(f"[bold green]Created README.md[/bold green]")
+
+
+def ensure_global_config():
+    """Ensure global config directory and files exist in user's home directory."""
+    global_dir = Path.home() / ".codeius"
+    global_dir.mkdir(exist_ok=True)
+
+    # Create global settings if they don't exist
+    global_settings_file = global_dir / "settings.json"
+    if not global_settings_file.exists():
+        default_global_settings = {
+            "max_tokens": 2048,
+            "conversation_history_limit": 50,
+            "max_file_size_mb": 10,
+            "max_concurrent_operations": 5,
+            "rate_limit_requests": 100,
+            "rate_limit_window_seconds": 60,
+            "mcp_server_timeout": 30,
+            "mcp_server_retry_attempts": 3,
+            "workspace_root": ".",
+            "groq_api_model": "llama3-70b-8192",
+            "google_api_model": "gemini-1.5-flash",
+            "enable_security_scanning": True,
+            "security_scan_on_file_write": False,
+            "default_theme": "default",
+            "first_run": True  # Track if this is the first run
+        }
+        with open(global_settings_file, 'w', encoding='utf-8') as f:
+            json.dump(default_global_settings, f, indent=2)
+
+        # Create global Agent.md
+        global_agent_file = global_dir / "Agent.md"
+        if not global_agent_file.exists():
+            default_agent_instructions = """# Global Codeius AI Agent Instructions
+
+You are an advanced AI coding assistant named Codeius. You help users with programming tasks by reading and writing files, performing git operations, running tests, searching code, executing shell commands, and conducting web searches.
+
+## Capabilities
+
+- Read and write source files in the workspace
+- Perform git operations (stage, commit)
+- Perform web searches using DuckDuckGo
+- Start and interact with background processes
+- Analyze code for quality, security, and style issues
+- Refactor code when requested
+- Generate documentation
+- Create project scaffolding
+- Manage environment variables
+- Execute shell commands securely
+- Run tests with pytest
+
+## Response Format
+
+When you need to perform actions, respond with JSON in this format:
+
+```json
+{
+  "explanation": "Describe your plan",
+  "actions": [
+    {"type": "read_file", "path": "..."},
+    {"type": "write_file", "path": "...", "content": "..."},
+    {"type": "append_to_file", "path": "...", "content": "..."},
+    {"type": "delete_file", "path": "..."},
+    {"type": "list_files", "pattern": "..."},
+    {"type": "create_directory", "path": "..."},
+    {"type": "git_commit", "message": "..."},
+    {"type": "web_search", "query": "..."},
+    {"type": "analyze_code", "path": "..."},
+    {"type": "start_process", "command": "..."},
+    {"type": "send_input", "pid": 123, "data": "..."},
+    {"type": "read_output", "pid": 123},
+    {"type": "read_error", "pid": 123},
+    {"type": "stop_process", "pid": 123}
+  ]
+}
+```
+
+If only a conversation or non-code answer is needed, reply conversationally.
+"""
+            with open(global_agent_file, 'w', encoding='utf-8') as f:
+                f.write(default_agent_instructions)
+
+        # Create global security policy
+        global_security_policy_file = global_dir / "security_policy.yml"
+        if not global_security_policy_file.exists():
+            default_security_policy = """# Global Security Policy for Codeius AI Coding Agent
+
+secrets_detection_enabled: true
+vulnerability_scanning_enabled: true
+policy_enforcement_enabled: true
+minimum_severity_to_report: medium  # low, medium, high
+
+# Allowed packages (whitelist)
+allowed_packages: []
+
+# Blocked packages (blacklist)
+blocked_packages: []
+
+# Forbidden functions that could be dangerous
+forbidden_functions:
+  - eval
+  - exec
+  - compile
+  - open
+  - input
+
+# Required security headers for web applications
+required_headers:
+  - Content-Security-Policy
+  - X-Frame-Options
+  - X-XSS-Protection
+  - X-Content-Type-Options
+
+# File access restrictions
+file_access:
+  allowed_extensions:
+    - .py
+    - .js
+    - .ts
+    - .tsx
+    - .json
+    - .md
+    - .txt
+    - .yaml
+    - .yml
+    - .html
+    - .css
+    - .xml
+  blocked_paths:
+    - /etc/
+    - /root/
+    - /proc/
+    - /sys/
+"""
+            with open(global_security_policy_file, 'w', encoding='utf-8') as f:
+                f.write(default_security_policy)
+
+        # Create global README
+        global_readme_file = global_dir / "README.md"
+        if not global_readme_file.exists():
+            global_readme_content = """# Global .codeius Directory
+
+This directory contains global configuration files for the Codeius AI Coding Agent.
+
+## Files
+
+- `settings.json` - Global agent settings and configuration
+- `Agent.md` - Global instructions for the AI agent
+- `security_policy.yml` - Global security policy configuration
+
+## Purpose
+
+This directory provides global configuration for Codeius that applies across all projects, unless overridden by project-specific configurations.
+"""
+            with open(global_readme_file, 'w', encoding='utf-8') as f:
+                f.write(global_readme_content)
+
+        console.print(f"[bold green]Created global configuration at: {global_dir}[/bold green]")
 
 
 def main():
+    # Ensure global config exists on any run of the agent
+    ensure_global_config()
+
     if '--init' in sys.argv:
         init_command()
         sys.exit(0)
