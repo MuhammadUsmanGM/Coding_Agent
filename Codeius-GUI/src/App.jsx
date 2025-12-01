@@ -12,8 +12,13 @@ import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import './App.css'
 
 import SearchModal from './components/SearchModal/SearchModal';
+import LoginPage from './components/LoginPage/LoginPage';
 
 function AppContent() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [user, setUser] = useState(null);
+  
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [currentModel, setCurrentModel] = useState(''); // Track current model

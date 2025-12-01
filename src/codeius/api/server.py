@@ -1,22 +1,21 @@
 # api/server.py
 
 import os
-import socket
-import time
-import subprocess
-from flask import Flask, send_from_directory, request, jsonify, session
-from flask_socketio import SocketIO
+from dotenv import load_dotenv
+from flask import Flask, send_from_directory, request, jsonify, session, redirect, url_for
+from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from authlib.integrations.flask_client import OAuth
 from codeius.core.agent import CodingAgent
 from codeius.core.conversation_db import conversation_db
-from codeius.core.context_manager_enhanced import context_manager
+from codeius.core.mongo_db import mongo_manager
 from codeius.core.project_scanner import project_scanner
 
-# Initialize agent
-agent = CodingAgent()
+load_dotenv()
 
 # Get the directory of this file and go up to project root, then to Codeius-GUI
-import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 
@@ -346,6 +345,16 @@ def switch_model():
     except Exception as e:
         print(f"Error in /api/switch_model endpoint: {str(e)}")
         return jsonify({'error': 'Failed to switch model', 'details': str(e)}), 500
+
+@app.route('/google_callback') # Assuming this is the intended route for Google callback
+def google_callback():
+    # Check if this is a CLI login
+    if 'cli_login' in session:
+        # Generates a one-time code or token for CLI
+        # For now, just redirect to a success page
+        return "Authentication successful! You can close this window."
+        
+    return redirect('http://localhost:8090/') # Redirect to frontend on port 8090
 
 @app.route('/api/sessions/<session_id>/summarize', methods=['POST'])
 def summarize_session(session_id):
