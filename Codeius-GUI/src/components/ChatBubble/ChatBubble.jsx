@@ -4,9 +4,10 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import TypingIndicator from '../TypingIndicator/TypingIndicator';
+import MessageActions from '../MessageActions/MessageActions';
 import './ChatBubble.css';
 
-const ChatBubble = ({ text, sender, timestamp, isLoading }) => {
+const ChatBubble = ({ text, sender, timestamp, isLoading, message, onCopy, onRegenerate, onDelete }) => {
   const [copiedCode, setCopiedCode] = useState(null);
 
   const copyToClipboard = (code, index) => {
@@ -31,7 +32,22 @@ const ChatBubble = ({ text, sender, timestamp, isLoading }) => {
               onClick={() => copyToClipboard(codeString, codeIndex)}
               title="Copy code"
             >
-              {copiedCode === codeIndex ? '✓ Copied!' : '📋 Copy'}
+              {copiedCode === codeIndex ? (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}>
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '4px'}}>
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copy
+                </>
+              )}
             </button>
           </div>
           <SyntaxHighlighter
@@ -88,6 +104,14 @@ const ChatBubble = ({ text, sender, timestamp, isLoading }) => {
         </div>
         <div className="bubble-timestamp">{timestamp}</div>
       </div>
+      {!isLoading && sender !== 'system' && message && (
+        <MessageActions
+          message={message}
+          onCopy={onCopy}
+          onRegenerate={onRegenerate}
+          onDelete={onDelete}
+        />
+      )}
     </div>
   );
 };

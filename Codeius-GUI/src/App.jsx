@@ -1,34 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
-import './App.css'
+import React, { useState, useEffect, useRef } from 'react'
 import Navbar from './components/Navbar/Navbar'
 import InputField from './components/InputField/InputField'
 import Sidebar from './components/Sidebar/Sidebar'
 import ChatBubble from './components/ChatBubble/ChatBubble'
 import HistoryModal from './components/HistoryModal/HistoryModal';
 import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts';
-import { loadMessages, saveMessages } from './utils/localStorage';
+import { saveSessionMessages, getSessionMessages, getCurrentSessionId, loadMessages } from './utils/localStorage'
+import './App.css'
 
 function App() {
-  // Load messages from localStorage or use default
-  const [messages, setMessages] = useState(() => {
-    const savedMessages = loadMessages();
-    if (savedMessages && savedMessages.length > 0) {
-      return savedMessages;
-    }
-    return [
-      {
-        id: 1,
-        text: "Hello! I'm your Codeius AI assistant. How can I help you today?",
-        sender: 'ai',
-        timestamp: new Date()
-      }
-    ];
-  });
-
+  const [messages, setMessages] = useState([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // Load messages on mount
+  useEffect(() => {
+    const currentSessionId = getCurrentSessionId();
+    const savedMessages = getSessionMessages(currentSessionId);
+    if (savedMessages && savedMessages.length > 0) {
+      setMessages(savedMessages);
+    } else {
+      // If no messages for the current session, initialize with a welcome message
+      setMessages([
+        {
+          id: 1,
+          text: "Hello! I'm your Codeius AI assistant. How can I help you today?",
+          sender: 'ai',
+          timestamp: new Date()
+        }
+      ]);
+    }
+  }, []);
 
   // Function to open history modal
   const openHistoryModal = () => {
@@ -42,8 +47,43 @@ function App() {
 
   // Auto-save messages to localStorage
   useEffect(() => {
-    saveMessages(messages);
+    const currentSessionId = getCurrentSessionId();
+    saveSessionMessages(currentSessionId, messages);
   }, [messages]);
+
+  // Message action handlers
+  const handleCopyMessage = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const handleRegenerateMessage = async (messageId) => {
+    // Find the message to regenerate
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex === -1) return;
+
+    // Find the user's prompt (previous message)
+    const userMessage = messages[messageIndex - 1];
+    if (!userMessage || userMessage.sender !== 'user') return;
+
+    // Remove the AI message and regenerate
+    const updatedMessages = messages.filter(msg => msg.id !== messageId);
+    setMessages(updatedMessages);
+
+    // Trigger regeneration by sending the same prompt
+    // This will be handled by InputField's sendMessage function
+    // For now, we'll just show a system message
+    const systemMsg = {
+      id: Date.now(),
+      text: 'Regenerating response...',
+      sender: 'system',
+      timestamp: new Date()
+    };
+    setMessages([...updatedMessages, systemMsg]);
+  };
+
+  const handleDeleteMessage = (messageId) => {
+    setMessages(messages.filter(msg => msg.id !== messageId));
+  };
 
   // Always auto-scroll to latest message for user messages, but track for AI responses
   const shouldAutoScroll = useRef(true);
@@ -178,6 +218,10 @@ function App() {
             sender={message.sender}
             timestamp={message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             isLoading={message.isLoading}
+            message={message}
+            onCopy={handleCopyMessage}
+            onRegenerate={handleRegenerateMessage}
+            onDelete={handleDeleteMessage}
           />
         ))}
         <div ref={messagesEndRef} />
