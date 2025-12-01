@@ -1,0 +1,80 @@
+.code-runner {
+  margin-top: 8px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #1e1e1e;
+  overflow: hidden;
+}
+
+.runner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #252526;
+  border-bottom: 1px solid #333;
+}
+
+.runner-title {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-family: monospace;
+}
+
+.run-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #0e639c;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
+}
+
+.run-btn:hover {
+  background-color: #1177bb;
+}
+
+.run-btn:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.runner-output {
+  padding: 12px;
+  background-color: #111;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9rem;
+  color: #ddd;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #333;
+}
+
+.output-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.output-content {
+  color: #cccccc;
+}
+
+.output-content.error {
+  color: #f48771;
+}
+
+.runner-status {
+  font-size: 0.8rem;
+  color: #888;
+  margin-right: 8px;
+}

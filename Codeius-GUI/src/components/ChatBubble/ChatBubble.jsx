@@ -1,5 +1,5 @@
 ```javascript
-import React, { useState, memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -7,25 +7,32 @@ import remarkGfm from 'remark-gfm';
 import MessageActions from '../MessageActions/MessageActions';
 import { useToast } from '../Toast/ToastContainer';
 import { getRelativeTime, formatFullTime } from '../../utils/timeUtils';
+import CodeRunner from '../CodeRunner/CodeRunner';
 import './ChatBubble.css';
 
 const ChatBubble = memo(({ 
   text, 
   sender, 
   timestamp, 
+  isLoading, 
   message,
   onCopy, 
   onRegenerate, 
   onDelete,
-  isStreaming 
+  onEdit 
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(text);
   const [copiedCode, setCopiedCode] = useState(null);
   const toast = useToast();
 
-    }, 60000); // Update every minute
+  const relativeTime = useMemo(() => getRelativeTime(timestamp), [timestamp]);
+  const fullTime = useMemo(() => formatFullTime(timestamp), [timestamp]);
 
-    return () => clearInterval(interval);
-  }, [timestamp]);
+  const handleSaveEdit = () => {
+    onEdit(message.id, editValue);
+    setIsEditing(false);
+  };
 
   const copyToClipboard = (code, index) => {
     navigator.clipboard.writeText(code);
@@ -34,20 +41,20 @@ const ChatBubble = memo(({
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  // Custom renderer for code blocks with copy button
-  const components = {
+  const components = useMemo(() => ({
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || '');
-      const codeString = String(children).replace(/\n$/, '');
-      const codeIndex = `${sender}-${timestamp}-${codeString.substring(0, 20)}`;
-
+      const language = match ? match[1] : '';
+      const codeContent = String(children).replace(/\n$/, '');
+      const codeIndex = `${sender}-${timestamp}-${codeContent.substring(0, 20)}`;
+      
       return !inline && match ? (
-        <div className="code-block-container">
+        <div className="code-block-wrapper">
           <div className="code-block-header">
-            <span className="code-language">{match[1]}</span>
+            <span className="code-language">{language}</span>
             <button
               className="copy-button"
-              onClick={() => copyToClipboard(codeString, codeIndex)}
+              onClick={() => copyToClipboard(codeContent, codeIndex)}
               title="Copy code"
             >
               {copiedCode === codeIndex ? (
@@ -70,21 +77,22 @@ const ChatBubble = memo(({
           </div>
           <SyntaxHighlighter
             style={vscDarkPlus}
-            language={match[1]}
+            language={language}
             PreTag="div"
             className="code-block"
             {...props}
           >
-            {codeString}
+            {codeContent}
           </SyntaxHighlighter>
+          <CodeRunner code={codeContent} language={language} />
         </div>
       ) : (
-        <code className="inline-code" {...props}>
+        <code className={className} {...props}>
           {children}
         </code>
       );
-    },
-  };
+    }
+  }), [copiedCode, sender, timestamp]);
 
   // System message styling
   if (sender === 'system') {
@@ -118,10 +126,7 @@ const ChatBubble = memo(({
           ) : (
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              components={{
-                code: CodeBlock,
-              }}
-              components={components} // Use the custom components for code blocks
+              components={components}
             >
               {text}
             </ReactMarkdown>
@@ -150,6 +155,7 @@ const ChatBubble = memo(({
       )}
     </div>
   );
-};
+});
 
 export default ChatBubble;
+```
