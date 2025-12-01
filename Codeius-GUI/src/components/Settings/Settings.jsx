@@ -12,6 +12,13 @@ const Settings = ({ onModelChange, currentModel }) => {
   const [errors, setErrors] = useState({});
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCustomInstructionsModal, setShowCustomInstructionsModal] = useState(false);
+  const [customInstructions, setCustomInstructions] = useState(`You are an expert coding assistant. Follow these guidelines:
+- Provide clear, concise code solutions
+- Explain complex concepts in simple terms
+- Use best practices for the requested language
+- Consider performance implications
+- Suggest improvements when appropriate`);
   const toast = useToast();
 
   useEffect(() => {
@@ -257,6 +264,13 @@ const Settings = ({ onModelChange, currentModel }) => {
               </div>
             </div>
 
+            <div className="custom-instructions-section">
+              <h4>Custom AI Instructions</h4>
+              <button className="edit-instructions-btn" onClick={() => setShowCustomInstructionsModal(true)}>
+                Edit Custom Instructions
+              </button>
+            </div>
+
             <div className="advanced-section">
               <h4>Advanced Model Config</h4>
               <div className="setting-item">
@@ -285,6 +299,105 @@ const Settings = ({ onModelChange, currentModel }) => {
       )}
 
       {isOpen && <div className="settings-backdrop" onClick={toggleSettings}></div>}
+
+      {/* Custom Instructions Modal */}
+      {showCustomInstructionsModal && (
+        <div className="custom-instructions-modal">
+          <div className="custom-instructions-content">
+            <div className="custom-instructions-header">
+              <h3>Custom AI Instructions</h3>
+              <button
+                className="close-modal-btn"
+                onClick={() => setShowCustomInstructionsModal(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="custom-instructions-body">
+              <div className="instructions-presets">
+                <h4>Predefined Templates</h4>
+                <div className="preset-options">
+                  <button
+                    className="preset-btn"
+                    onClick={() => setCustomInstructions(`You are an expert Frontend Developer. Focus on:
+- HTML, CSS, JavaScript, React, Vue, or Angular
+- Modern UI/UX implementation
+- Responsive design principles
+- Browser compatibility
+- Performance optimization for frontend assets`)}
+                  >
+                    Frontend Development
+                  </button>
+                  <button
+                    className="preset-btn"
+                    onClick={() => setCustomInstructions(`You are an expert Backend Developer. Focus on:
+- Server-side logic, databases, APIs
+- Security best practices
+- Scalability and performance
+- Integration patterns
+- Architecture design`)}
+                  >
+                    Backend Development
+                  </button>
+                  <button
+                    className="preset-btn"
+                    onClick={() => setCustomInstructions(`You are an expert Data Analyst. Focus on:
+- Statistical analysis
+- Data visualization
+- Data cleaning and preprocessing
+- Python or R for analysis
+- Interpretation of results`)}
+                  >
+                    Data Analysis
+                  </button>
+                  <button
+                    className="preset-btn"
+                    onClick={() => setCustomInstructions(`You are an expert DevOps Engineer. Focus on:
+- CI/CD pipelines
+- Infrastructure as Code
+- Containerization (Docker, Kubernetes)
+- Monitoring and observability
+- Cloud platforms and deployment`)}
+                  >
+                    DevOps
+                  </button>
+                </div>
+              </div>
+
+              <div className="instructions-editor">
+                <label htmlFor="custom-instructions">Custom Instructions</label>
+                <textarea
+                  id="custom-instructions"
+                  className="instructions-textarea"
+                  placeholder="Enter your custom instructions for the AI assistant..."
+                  rows="8"
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                ></textarea>
+              </div>
+
+              <div className="instructions-actions">
+                <button
+                  className="save-instructions-btn"
+                  onClick={() => {
+                    toast.success('Custom instructions saved successfully!');
+                    setShowCustomInstructionsModal(false);
+                  }}
+                >
+                  Save Instructions
+                </button>
+                <button
+                  className="cancel-instructions-btn"
+                  onClick={() => setShowCustomInstructionsModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

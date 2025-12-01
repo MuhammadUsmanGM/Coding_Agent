@@ -496,11 +496,224 @@ input:checked + .slider:before {
   background: linear-gradient(rgba(0, 198, 255, 0.5), rgba(0, 114, 255, 0.5));
 }
 
+/* Custom Instructions Modal */
+.custom-instructions-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10002;
+  backdrop-filter: blur(5px);
+}
+
+.custom-instructions-content {
+  background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.custom-instructions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.custom-instructions-header h3 {
+  margin: 0;
+  color: #87ceeb;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  color: #87ceeb;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff5252;
+}
+
+.custom-instructions-body {
+  padding: 20px;
+}
+
+.instructions-presets {
+  margin-bottom: 20px;
+}
+
+.instructions-presets h4 {
+  color: #87ceeb;
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.preset-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preset-btn {
+  padding: 8px 12px;
+  background: rgba(0, 114, 255, 0.2);
+  color: #87ceeb;
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  background: rgba(0, 114, 255, 0.3);
+}
+
+.instructions-editor {
+  margin-bottom: 20px;
+}
+
+.instructions-editor label {
+  display: block;
+  color: #b0bec5;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.instructions-textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 150px;
+  box-sizing: border-box;
+}
+
+.instructions-textarea:focus {
+  outline: none;
+  border-color: rgba(100, 180, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(100, 180, 255, 0.2);
+}
+
+.instructions-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.instructions-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.9rem;
+}
+
+.save-instructions-btn {
+  background: rgba(0, 200, 100, 0.2);
+  color: #69f0ae;
+  border: 1px solid rgba(0, 200, 100, 0.4);
+}
+
+.save-instructions-btn:hover {
+  background: rgba(0, 220, 120, 0.3);
+}
+
+.cancel-instructions-btn {
+  background: rgba(200, 50, 50, 0.2);
+  color: #ff8a80;
+  border: 1px solid rgba(200, 50, 50, 0.4);
+}
+
+.cancel-instructions-btn:hover {
+  background: rgba(220, 70, 70, 0.3);
+}
+
+.edit-instructions-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 114, 255, 0.2);
+  color: #87ceeb;
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.edit-instructions-btn:hover {
+  background: rgba(0, 114, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.custom-instructions-section {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-instructions-section h4 {
+  color: #87ceeb;
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .settings-dropdown {
     width: 300px;
     right: 0;
     left: auto;
+  }
+
+  .custom-instructions-content {
+    width: 95%;
+    margin: 20px;
   }
 }
