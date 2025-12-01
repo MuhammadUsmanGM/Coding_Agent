@@ -55,3 +55,7 @@
 2025-11-27 12:40:37 - codeius.app - WARNING - Slow operation: llm_chat took 7.74s
 2025-11-27 12:40:56 - codeius.app - INFO - Model switched to groq_0
 2025-11-27 13:05:23 - codeius.app - WARNING - Slow operation: llm_chat took 8.55s
+2025-12-01 01:40:34 - codeius.app - WARNING - Slow operation: llm_chat took 8.11s
+2025-12-01 01:40:52 - codeius.app - WARNING - Slow operation: llm_chat took 4.34s
+2025-12-01 01:42:47 - codeius.app - WARNING - Slow operation: llm_chat took 3.73s
+2025-12-01 02:00:52 - codeius.app - WARNING - Slow operation: llm_chat took 9.25s

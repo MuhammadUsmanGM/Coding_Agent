@@ -17,8 +17,7 @@ codeius_gui_dir = os.path.join(project_root, 'Codeius-GUI')
 dist_path = os.path.join(codeius_gui_dir, 'dist')
 
 # Check if we're in development mode (dist may not exist) or if the path is different
-print(f"Looking for React build at: {dist_path}")
-print(f"Path exists: {os.path.exists(dist_path)}")
+
 
 # If the standard path doesn't exist, try to find it relative to the current working directory
 if not os.path.exists(dist_path):
@@ -35,7 +34,7 @@ if not os.path.exists(dist_path):
 
     for path in possible_roots:
         abs_path = os.path.abspath(path)
-        print(f"Trying path: {abs_path} (exists: {os.path.exists(abs_path)})")
+
         if os.path.exists(abs_path):
             dist_path = abs_path
             break
@@ -47,13 +46,12 @@ if os.path.exists(dist_path):
     app = Flask(__name__,
                static_folder=final_dist_path,  # Path to built React app
                template_folder=final_dist_path)
-    print("Production mode: Serving built React app")
+
 else:
     final_dist_path = None
     # If no production build, create app without static folder
     app = Flask(__name__)
-    print("Warning: React build not found - please run 'npm run build' in the Codeius-GUI directory")
-    print("Using development mode with fallback message")
+
 
 CORS(app, resources={
     r"/api/*": {
@@ -212,6 +210,71 @@ def clear_history():
         print(f"Error in /api/clear_history endpoint: {str(e)}")
         return jsonify({'error': 'Failed to clear history', 'details': str(e)}), 500
 
+@app.route('/api/cwd')
+def get_cwd():
+    """Get current working directory"""
+    try:
+        return jsonify({'cwd': os.getcwd()})
+    except Exception as e:
+        return jsonify({'error': 'Failed to get CWD', 'details': str(e)}), 500
+
+@app.route('/api/shell', methods=['POST'])
+def execute_shell():
+    """Execute a shell command"""
+    try:
+        data = request.get_json()
+        command = data.get('command')
+        
+        if not command:
+            return jsonify({'error': 'No command provided'}), 400
+
+        # Security checks (copied from cli.py)
+        dangerous_patterns = [
+            'rm -rf', 'rm -r', 'rmdir', 'del /s', 'format', 'fdisk',
+            'mkfs', 'dd if=', '>/dev/', '>/etc/',
+            'cat > /etc/', 'echo > /etc/', 'chmod 777 /',
+            'mv /etc/', 'cp /etc/', 'touch /etc/',
+            'shutdown', 'reboot', 'poweroff', 'halt'
+        ]
+
+        cmd_lower = command.lower()
+        for pattern in dangerous_patterns:
+            if pattern in cmd_lower:
+                return jsonify({'error': 'Command blocked for security reasons', 'output': f'Blocked potentially dangerous command: {command}'}), 403
+
+        import subprocess
+        
+        # Additional injection checks
+        injection_patterns = ['&&', '||', ';', '`', '$(', '|', '>', '>>', '<']
+        for pattern in injection_patterns:
+            if pattern in cmd_lower:
+                 return jsonify({'error': 'Command blocked for security reasons (injection risk)', 'output': f'Blocked command with injection risk: {command}'}), 403
+
+        # Execute command
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        output = result.stdout
+        if result.stderr:
+            output += f"\nError: {result.stderr}"
+            
+        return jsonify({
+            'output': output,
+            'returncode': result.returncode,
+            'cwd': os.getcwd() # Return new CWD if it changed (though subprocess doesn't change parent CWD usually)
+        })
+
+    except subprocess.TimeoutExpired:
+        return jsonify({'error': 'Command timed out', 'output': 'Command execution timed out'}), 408
+    except Exception as e:
+        print(f"Error in /api/shell endpoint: {str(e)}")
+        return jsonify({'error': 'Failed to execute command', 'details': str(e)}), 500
+
 # Health check endpoint
 @app.route('/api/health')
 def health():
@@ -223,6 +286,11 @@ def run_gui():
     import webbrowser
     from rich.console import Console
     from rich.table import Table
+    import logging
+
+    # Suppress Flask's default logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
 
     port = 8080  # Fixed port
     local_url = f"http://localhost:{port}"
@@ -240,17 +308,20 @@ def run_gui():
     table.add_row("Network", network_url)
 
     console.print(table)
-    console.print("[bold yellow]Press 'o' to open in browser (one time only), or Ctrl+C to exit[/bold yellow]")
+    console.print("[bold yellow]Press 'o' + Enter to open in browser, or Ctrl+C to exit[/bold yellow]")
 
     # Handle opening browser when 'o' is pressed
     import threading
     import sys
 
+    browser_opened = [False]  # Use list to allow modification in nested function
+
     def check_input():
         while True:
             try:
                 user_input = input().strip().lower()
-                if user_input == 'o':
+                if user_input == 'o' and not browser_opened[0]:
+                    browser_opened[0] = True
                     webbrowser.open(local_url)
                     console.print("\n[bold green]✓ Browser opened successfully![/bold green]")
                     console.print("[bold yellow]Press Ctrl+C to exit.[/bold yellow]")
@@ -259,13 +330,15 @@ def run_gui():
                     sys.exit(0)
             except (EOFError, KeyboardInterrupt):
                 sys.exit(0)
+            except Exception:
+                pass  # Ignore other input errors
 
     # Start input thread
     input_thread = threading.Thread(target=check_input, daemon=True)
     input_thread.start()
 
-    # Run the server
-    socketio.run(app, host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    # Run the server with suppressed output
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, use_reloader=False, log_output=False)
 
 
 def get_network_ip():

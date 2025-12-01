@@ -167,3 +167,127 @@
     max-width: 70%; /* Slightly narrower on large screens for better readability */
   }
 }
+
+/* System Message Styling */
+.system-bubble {
+  align-self: center;
+  margin: 10px auto;
+  max-width: 90%;
+  width: fit-content;
+}
+
+.system-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.system-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.system-text {
+  white-space: pre-wrap;
+}
+
+/* Code Block Enhancements */
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.code-language {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.copy-button {
+  background: rgba(0, 114, 255, 0.2);
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  color: #4fc3f7;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.copy-button:hover {
+  background: rgba(0, 114, 255, 0.3);
+  border-color: rgba(0, 114, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.copy-button:active {
+  transform: translateY(0);
+}
+
+/* Markdown Enhancements */
+.bubble-text h1, .bubble-text h2, .bubble-text h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.bubble-text h1 { font-size: 1.5rem; }
+.bubble-text h2 { font-size: 1.3rem; }
+.bubble-text h3 { font-size: 1.1rem; }
+
+.bubble-text ul, .bubble-text ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.bubble-text li {
+  margin: 4px 0;
+}
+
+.bubble-text a {
+  color: #4fc3f7;
+  text-decoration: underline;
+}
+
+.bubble-text a:hover {
+  color: #81d4fa;
+}
+
+.bubble-text table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.bubble-text th, .bubble-text td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  text-align: left;
+}
+
+.bubble-text th {
+  background: rgba(0, 114, 255, 0.2);
+  font-weight: 600;
+}
+
+.bubble-text blockquote {
+  border-left: 3px solid rgba(0, 114, 255, 0.5);
+  padding-left: 12px;
+  margin: 10px 0;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}

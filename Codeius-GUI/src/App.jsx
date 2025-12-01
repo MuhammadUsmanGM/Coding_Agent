@@ -5,18 +5,28 @@ import InputField from './components/InputField/InputField'
 import Sidebar from './components/Sidebar/Sidebar'
 import ChatBubble from './components/ChatBubble/ChatBubble'
 import HistoryModal from './components/HistoryModal/HistoryModal';
+import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts';
+import { loadMessages, saveMessages } from './utils/localStorage';
 
 function App() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hello! I'm your Codeius AI assistant. How can I help you today?",
-      sender: 'ai',
-      timestamp: new Date()
+  // Load messages from localStorage or use default
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = loadMessages();
+    if (savedMessages && savedMessages.length > 0) {
+      return savedMessages;
     }
-  ]);
+    return [
+      {
+        id: 1,
+        text: "Hello! I'm your Codeius AI assistant. How can I help you today?",
+        sender: 'ai',
+        timestamp: new Date()
+      }
+    ];
+  });
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -29,6 +39,11 @@ function App() {
   const closeHistoryModal = () => {
     setIsHistoryModalOpen(false);
   };
+
+  // Auto-save messages to localStorage
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   // Always auto-scroll to latest message for user messages, but track for AI responses
   const shouldAutoScroll = useRef(true);
@@ -94,7 +109,33 @@ function App() {
     const container = chatContainerRef.current;
 
     const handleKeyDown = (e) => {
-      // Only respond to keys if the input field is not focused
+      // Global shortcuts
+      if (e.ctrlKey && e.key === '/') {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+        return;
+      }
+
+      if (e.ctrlKey && e.key === 'l') {
+        e.preventDefault();
+        // Clear messages
+        setMessages([{
+          id: 1,
+          text: "Conversation cleared. How can I help you?",
+          sender: 'system',
+          timestamp: new Date()
+        }]);
+        return;
+      }
+
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        // Focus input field
+        document.querySelector('.input-field')?.focus();
+        return;
+      }
+
+      // Only respond to navigation keys if the input field is not focused
       if (!document.activeElement.classList.contains('input-field')) {
         if (e.key === 'ArrowUp' && container) {
           e.preventDefault();
@@ -136,6 +177,7 @@ function App() {
             text={message.text}
             sender={message.sender}
             timestamp={message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            isLoading={message.isLoading}
           />
         ))}
         <div ref={messagesEndRef} />
@@ -144,6 +186,8 @@ function App() {
       <InputField setMessages={setMessages} messages={messages} />
       {/* History modal */}
       <HistoryModal isOpen={isHistoryModalOpen} onClose={closeHistoryModal} />
+      {/* Keyboard shortcuts overlay */}
+      <KeyboardShortcuts isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </div>
   )
 }

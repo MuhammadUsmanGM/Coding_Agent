@@ -85,3 +85,95 @@ body.sidebar-open .input-container {
   .input-field::placeholder {
     color: rgba(255, 255, 255, 0.6);
   }
+
+/* Shell Mode Styles */
+.input-field.shell-mode {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  border-color: rgba(255, 215, 0, 0.5); /* Gold color for shell */
+  background: rgba(20, 20, 20, 0.9);
+}
+
+.input-field.shell-mode:focus {
+  box-shadow:
+    0 8px 32px rgba(255, 215, 0, 0.3),
+    inset 0 4px 12px rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.8);
+}
+
+.input-field.shell-mode::placeholder {
+  color: rgba(255, 215, 0, 0.6);
+}
+
+/* CWD Display */
+.cwd-display {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+/* Input Wrapper */
+.input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-wrapper .input-field {
+  flex: 1;
+}
+
+/* Send Button */
+.send-button {
+  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 114, 255, 0.4);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(100, 100, 100, 0.5);
+}
+
+/* Input Footer */
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 12px;
+}
+
+.char-counter {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
