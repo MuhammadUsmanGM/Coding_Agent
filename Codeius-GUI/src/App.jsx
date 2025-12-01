@@ -11,6 +11,8 @@ import ConfirmationDialog from './components/ConfirmationDialog/ConfirmationDial
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import './App.css'
 
+import SearchModal from './components/SearchModal/SearchModal';
+
 function AppContent() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -21,6 +23,7 @@ function AppContent() {
   const [messageToDelete, setMessageToDelete] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
   const sessionId = useRef(`session_${Date.now()}`);
 
   const messagesEndRef = useRef(null);
@@ -327,6 +330,15 @@ function AppContent() {
               />
             )}
           </Suspense>
+
+          {/* Search Modal */}
+          <SearchModal
+            isOpen={showSearch}
+            onClose={() => setShowSearch(false)}
+            messages={messages}
+            onSelectMessage={handleSearchResultSelect}
+          />
+
           {messages.map((message) => (
             <ChatBubble
               key={message.id}

@@ -64,15 +64,28 @@ def handle_command(agent: CodingAgent, command: str) -> bool:
         show_help(args[0] if args else None)
     
     elif cmd == '/history':
-        count = int(args[0]) if args and args[0].isdigit() else 10
-        recent = history_manager.get_recent(count)
-        
-        if recent:
-            print_panel(f"Last {len(recent)} commands:", "📜 Command History", "cyan")
-            for i, hist_cmd in enumerate(recent, 1):
-                console.print(f"  {i}. [dim]{hist_cmd}[/dim]")
+        # Usage: /history [count] or /history search <query> [-r]
+        if args and args[0] == 'search':
+            query = args[1] if len(args) > 1 else ""
+            use_regex = '-r' in args
+            
+            results = history_manager.search(query, use_regex)
+            if results:
+                print_panel(f"Found {len(results)} matches for '{query}'", "🔍 History Search", "cyan")
+                for i, hist_cmd in enumerate(results[-10:], 1): # Show last 10 matches
+                    console.print(f"  {i}. [dim]{hist_cmd}[/dim]")
+            else:
+                print_warning(f"No matches found for '{query}'")
         else:
-            print_info("No command history yet")
+            count = int(args[0]) if args and args[0].isdigit() else 10
+            recent = history_manager.get_recent(count)
+            
+            if recent:
+                print_panel(f"Last {len(recent)} commands:", "📜 Command History", "cyan")
+                for i, hist_cmd in enumerate(recent, 1):
+                    console.print(f"  {i}. [dim]{hist_cmd}[/dim]")
+            else:
+                print_info("No command history yet")
     
     elif cmd == '/clear':
         agent.reset_history()

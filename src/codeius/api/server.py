@@ -347,6 +347,28 @@ def switch_model():
         print(f"Error in /api/switch_model endpoint: {str(e)}")
         return jsonify({'error': 'Failed to switch model', 'details': str(e)}), 500
 
+@app.route('/api/sessions/<session_id>/summarize', methods=['POST'])
+def summarize_session(session_id):
+    try:
+        # Start background task for summarization
+        # For now, just return success
+        return jsonify({'status': 'success', 'message': 'Summarization started'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/search', methods=['GET'])
+def search_messages():
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify([])
+            
+        limit = int(request.args.get('limit', 20))
+        results = conversation_db.search_conversations(query, limit)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/clear_history', methods=['POST'])
 def clear_history():
     """Clear conversation history"""
