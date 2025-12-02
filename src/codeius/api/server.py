@@ -405,6 +405,43 @@ def get_cwd():
     except Exception as e:
         return jsonify({'error': 'Failed to get CWD', 'details': str(e)}), 500
 
+@app.route('/api/files', methods=['GET'])
+def list_files():
+    """List files and directories in a given path"""
+    try:
+        path = request.args.get('path', '.')
+        
+        # Security check: prevent directory traversal outside of allowed paths if needed
+        # For now, we allow exploring from CWD
+        base_path = os.getcwd()
+        target_path = os.path.abspath(os.path.join(base_path, path))
+        
+        # Simple check to ensure we are still within the system (basic protection)
+        # In a real app, you might want to restrict to project_root
+        
+        if not os.path.exists(target_path):
+             return jsonify({'error': 'Path does not exist'}), 404
+             
+        if not os.path.isdir(target_path):
+             return jsonify({'error': 'Path is not a directory'}), 400
+
+        items = []
+        for item in os.listdir(target_path):
+            item_path = os.path.join(target_path, item)
+            is_dir = os.path.isdir(item_path)
+            items.append({
+                'name': item,
+                'type': 'directory' if is_dir else 'file',
+                'path': os.path.join(path, item).replace('\\', '/') # Return relative path
+            })
+            
+        # Sort: directories first, then files
+        items.sort(key=lambda x: (x['type'] != 'directory', x['name'].lower()))
+        
+        return jsonify({'files': items})
+    except Exception as e:
+        return jsonify({'error': 'Failed to list files', 'details': str(e)}), 500
+
 @app.route('/api/sessions/<session_id>/share', methods=['POST'])
 def share_session(session_id):
     """Generate a shareable link for a session"""

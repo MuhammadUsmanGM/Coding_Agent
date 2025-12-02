@@ -124,6 +124,18 @@ export const deleteUploadedFile = async (filename) => {
 };
 
 // Health check
+export const getFiles = async (path = '.') => {
+  try {
+    const response = await fetch(`${API_BASE}/files?path=${encodeURIComponent(path)}`);
+    if (!response.ok) throw new Error('Failed to fetch files');
+    const data = await response.json();
+    return data.files;
+  } catch (error) {
+    console.error('Error fetching files:', error);
+    return [];
+  }
+};
+
 export const checkHealth = async () => {
   try {
     await fetch(`${API_BASE}/health`);

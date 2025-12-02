@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Fuse from 'fuse.js';
 import './CommandAutocomplete.css';
 
-const CommandAutocomplete = ({ commands, query, onSelect, onClose, position }) => {
+const CommandAutocomplete = ({ commands, query, onSelect, onClose, position, title = "Commands", triggerChar = "/" }) => {
   const listRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
@@ -15,7 +15,7 @@ const CommandAutocomplete = ({ commands, query, onSelect, onClose, position }) =
 
   // Filter commands based on query
   const filteredCommands = query.length > 1
-    ? fuse.search(query.slice(1)).map(result => result.item)
+    ? fuse.search(query.slice(triggerChar.length)).map(result => result.item)
     : commands;
 
   // Handle keyboard navigation
@@ -56,7 +56,7 @@ const CommandAutocomplete = ({ commands, query, onSelect, onClose, position }) =
   return (
     <div className="autocomplete-container" style={{ bottom: position?.bottom || '70px' }}>
       <div className="autocomplete-header">
-        <span>Commands</span>
+        <span>{title}</span>
         <span className="autocomplete-hint">↑↓ Navigate • Enter Select • Esc Close</span>
       </div>
       <ul className="autocomplete-list" ref={listRef}>

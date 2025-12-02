@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, forwardRef } from 'react';
 import socketService from '../../services/socket';
-import { getCwd, executeShellCommand, getModels, switchModel, clearHistory } from '../../services/api';
+import { getCwd, executeShellCommand, getModels, switchModel, clearHistory, getFiles } from '../../services/api';
 import CommandAutocomplete from '../CommandAutocomplete/CommandAutocomplete';
 import { COMMANDS } from '../../utils/commands';
 import FileUpload from '../FileUpload/FileUpload';
@@ -10,6 +10,8 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
   const [isSending, setIsSending] = useState(false);
   const [cwd, setCwd] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [showFileAutocomplete, setShowFileAutocomplete] = useState(false);
+  const [fileSuggestions, setFileSuggestions] = useState([]);
   const [charCount, setCharCount] = useState(inputValue?.length || 0);
   const [isShellMode, setIsShellMode] = useState(false);
   const textareaRef = useRef(null);
@@ -30,7 +32,7 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
     setCharCount(inputValue?.length || 0);
   }, [inputValue]);
 
-  const handleInput = (e) => {
+  const handleInput = async (e) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -41,8 +43,43 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
     // Show autocomplete if typing a command
     if (value.startsWith('/') && value.length > 0) {
       setShowAutocomplete(true);
+      setShowFileAutocomplete(false);
+    } else if (value.includes('@')) {
+       // File Autocomplete Logic
+       const lastWord = value.split(/\s+/).pop();
+       if (lastWord.startsWith('@')) {
+         const pathQuery = lastWord.slice(1);
+         setShowFileAutocomplete(true);
+         setShowAutocomplete(false);
+         
+         try {
+           // Determine directory to search
+           // If pathQuery ends with /, search that directory
+           // If not, search the parent directory
+           let searchPath = '.';
+           if (pathQuery.includes('/')) {
+             const lastSlashIndex = pathQuery.lastIndexOf('/');
+             searchPath = pathQuery.substring(0, lastSlashIndex) || '.';
+           }
+           
+           const files = await getFiles(searchPath);
+           
+           // Transform files to autocomplete format
+           const suggestions = files.map(f => ({
+             cmd: f.path, // The full relative path
+             desc: f.type === 'directory' ? 'Folder' : 'File'
+           }));
+           
+           setFileSuggestions(suggestions);
+         } catch (err) {
+           console.error("Failed to fetch files for autocomplete", err);
+         }
+       } else {
+         setShowFileAutocomplete(false);
+       }
     } else {
       setShowAutocomplete(false);
+      setShowFileAutocomplete(false);
     }
 
     // Reset height to auto to calculate the proper scrollHeight
@@ -67,12 +104,15 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
     setIsSending(true);
     const currentInput = inputValue; // Capture input
     setInputValue(''); // Clear immediately using parent state
+    setShowAutocomplete(false);
+    setShowFileAutocomplete(false);
 
     // Handle Slash Commands
     if (currentInput.startsWith('/')) {
       const parts = currentInput.split(' ');
       const command = parts[0].toLowerCase();
 
+      // 1. Handle implemented local commands
       if (command === '/toggle') {
         setIsShellMode(prev => !prev);
         const systemMessage = {
@@ -196,6 +236,33 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
         setIsSending(false);
         return;
       }
+
+      // 2. Check if it's a known command but NOT implemented in GUI
+      const isKnownCommand = COMMANDS.some(c => c.cmd.startsWith(command));
+      if (isKnownCommand) {
+         const warningMessage = {
+            id: Date.now(),
+            text: `Command '${command}' is not yet supported in the GUI.`,
+            sender: 'system',
+            timestamp: new Date(),
+            isError: true
+          };
+          setMessages(prev => [...prev, warningMessage]);
+          setIsSending(false);
+          return;
+      }
+
+      // 3. Unknown command - Block it
+       const warningMessage = {
+          id: Date.now(),
+          text: `Unknown command: '${command}'. Type /help for available commands.`,
+          sender: 'system',
+          timestamp: new Date(),
+          isError: true
+        };
+        setMessages(prev => [...prev, warningMessage]);
+        setIsSending(false);
+        return;
     }
 
     // Add user message
@@ -295,6 +362,16 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
     textareaRef.current?.focus();
   };
 
+  const handleFileSelect = (path) => {
+    // Replace the last word (which is the partial path) with the selected path
+    const words = inputValue.split(/\s+/);
+    words.pop(); // Remove partial
+    const newValue = words.join(' ') + (words.length > 0 ? ' ' : '') + '@' + path + ' ';
+    setInputValue(newValue);
+    setShowFileAutocomplete(false);
+    textareaRef.current?.focus();
+  };
+
   return (
     <div className="input-container">
       {showAutocomplete && (
@@ -303,6 +380,19 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
           query={inputValue}
           onSelect={handleAutocompleteSelect}
           onClose={() => setShowAutocomplete(false)}
+          title="Commands"
+          triggerChar="/"
+        />
+      )}
+      
+      {showFileAutocomplete && (
+        <CommandAutocomplete
+          commands={fileSuggestions}
+          query={inputValue.split(/\s+/).pop()} // Pass only the last word as query
+          onSelect={handleFileSelect}
+          onClose={() => setShowFileAutocomplete(false)}
+          title="Files"
+          triggerChar="@"
         />
       )}
       
