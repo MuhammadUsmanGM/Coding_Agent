@@ -40,12 +40,23 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 ## Step 3: Launch the Agent
 
-Start the agent by running:
+You can use Codeius in two ways:
+
+### Option 1: Command-Line Interface (CLI)
+Start the agent with a rich CLI interface:
 ```bash
 codeius
 ```
 
 You should see a welcome interface with a prompt asking for your input.
+
+### Option 2: Web-Based GUI
+Start the agent with a modern web interface:
+```bash
+codeius web
+```
+
+This will start the backend server and display the URL where you can access the GUI in your browser.
 
 ## Step 4: Basic Interaction
 

@@ -2,7 +2,12 @@
 
 ## Overview
 
-This guide demonstrates how to use the various features of the Codeius AI Coding Agent with practical examples. The agent combines AI capabilities with specialized tools to assist in coding tasks.
+This guide demonstrates how to use the various features of the Codeius AI Coding Agent with practical examples. The agent combines AI capabilities with specialized tools to assist in coding tasks. You can use Codeius through either:
+
+1. **Command-Line Interface (CLI)**: Rich terminal interface with advanced visuals and keyboard shortcuts
+2. **Web-Based GUI**: Modern React interface with visual components and enhanced user experience
+
+Both interfaces provide the same functionality but with different interaction paradigms to suit your preference.
 
 ## Core Features
 
