@@ -173,6 +173,17 @@ class CodingAgent:
             "   {\"type\": \"read_output\",       \"pid\": 123},\n"
             "   {\"type\": \"read_error\",        \"pid\": 123},\n"
             "   {\"type\": \"stop_process\",      \"pid\": 123}\n"
+            " ]\n"
+            "}\n\n"
+            "If only a conversation or non-code answer is needed, reply conversationally."
+        )
+
+    def ask(self, prompt: str, max_tokens: Optional[int] = None):
+        """
+        Process a user prompt and return the agent's response.
+
+        Args:
+            prompt: The user's input prompt
             max_tokens: Optional maximum number of tokens for the response
                         (defaults to config value if not provided)
 
@@ -198,8 +209,42 @@ class CodingAgent:
         duration = time.time() - start_time
         perf_monitor.record_operation("llm_chat", duration, success)
 
+        # Add to conversation history
+        self.conversation_manager.add_message("user", prompt)
 
         # Try to parse/action JSON; else conversational reply
+        result, executed = self.action_executor.execute_actions(reply, self.search_provider)
+        if executed:
+            self.conversation_manager.add_message("assistant", result)
+            return result
+        else:
+            self.conversation_manager.add_message("assistant", reply)
+            return reply
+
+    def reset_history(self) -> None:
+        """Reset the conversation history."""
+        self.conversation_manager.reset_history()
+
+    def list_custom_models(self) -> Dict[str, Any]:
+        """
+        Get list of custom models.
+
+        Returns:
             Dictionary containing all custom model information.
         """
         return self.model_manager.list_custom_models()
+
+    def add_custom_model(self, name: str, api_key: str, base_url: str, model: str) -> bool:
+        """
+        Add a custom model to the agent.
+
+        Args:
+            name: Name for the custom model
+            api_key: API key for the model
+            base_url: Base URL for the API
+            model: Model identifier
+
+        Returns:
+            True if the model was added successfully, False otherwise
+        """
+        return self.model_manager.add_custom_model(name, api_key, base_url, model)

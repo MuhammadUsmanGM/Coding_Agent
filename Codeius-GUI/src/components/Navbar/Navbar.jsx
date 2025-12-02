@@ -1,4 +1,3 @@
-```
 import React, { useState } from 'react';
 import Settings from '../Settings/Settings';
 import HistoryIcon from '../HistoryIcon/HistoryIcon';
@@ -38,4 +37,3 @@ const Navbar = ({ onOpenHistory, onModelChange, currentModel, user, messages }) 
 };
 
 export default Navbar;
-```

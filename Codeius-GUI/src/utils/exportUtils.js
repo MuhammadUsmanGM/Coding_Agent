@@ -22,10 +22,10 @@ export const exportToPDF = async (elementId, filename = 'conversation.pdf') => {
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    // const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
     
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 30;
+    // const imgX = (pdfWidth - imgWidth * ratio) / 2;
+    // const imgY = 30;
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, (imgHeight * pdfWidth) / imgWidth);
     pdf.save(filename);

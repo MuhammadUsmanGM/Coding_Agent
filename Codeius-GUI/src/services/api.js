@@ -128,7 +128,7 @@ export const checkHealth = async () => {
   try {
     await fetch(`${API_BASE}/health`);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

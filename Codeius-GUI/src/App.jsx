@@ -13,6 +13,11 @@ import './App.css'
 
 import SearchModal from './components/SearchModal/SearchModal';
 import LoginPage from './components/LoginPage/LoginPage';
+import Sidebar from './components/Sidebar/Sidebar';
+import GitControls from './components/GitControls/GitControls';
+import Settings from './components/Settings/Settings';
+import HistoryModal from './components/HistoryModal/HistoryModal';
+import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,6 +34,8 @@ function AppContent() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const sessionId = useRef(`session_${Date.now()}`);
 
   const messagesEndRef = useRef(null);
@@ -138,6 +145,24 @@ function AppContent() {
   const handleDeleteMessage = (messageId) => {
     setMessageToDelete(messageId);
     setShowConfirmDialog(true);
+  };
+
+  const loadHistoryConversation = (conversation) => {
+    if (conversation && conversation.messages) {
+      setMessages(conversation.messages);
+      setShowHistory(false);
+      toast.success('Conversation loaded!');
+    }
+  };
+
+  const handleSearchResultSelect = (message) => {
+    // Scroll to the message or highlight it
+    const messageElement = document.getElementById(`message-${message.id}`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('highlight');
+      setTimeout(() => messageElement.classList.remove('highlight'), 2000);
+    }
   };
 
   // Always auto-scroll to latest message

@@ -1,4 +1,4 @@
-.App {
+body {
   width: 100vw;
   height: 100vh;
   background-image: url('/logo.png');
@@ -6,10 +6,19 @@
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  overflow: hidden; /* Prevent double scrollbars */
+  background-color: #0a192f; /* Fallback color */
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin-left: 0;
-  position: relative; /* Ensure proper positioning context */
+  position: relative;
 }
 
 /* Remove default focus outlines globally */
@@ -47,7 +56,7 @@ textarea:focus {
 }
 
 /* Adjust main content when sidebar is open */
-body.sidebar-open .App {
+body.sidebar-open .app-container {
   margin-left: 300px;
   overflow: hidden; /* Prevent overflow when sidebar is open */
 }
@@ -64,7 +73,7 @@ body.sidebar-open {
 }
 
 /* Remove any potential blur effects */
-.App {
+.app-container {
   filter: none !important;
 }
 
@@ -131,7 +140,7 @@ body.sidebar-open {
   }
 
   /* On mobile, slide the entire content instead of margin */
-  body.sidebar-open .App {
+  body.sidebar-open .app-container {
     transform: translateX(0);
     margin-left: 0;
   }
@@ -148,7 +157,7 @@ body.sidebar-open {
 
 /* Extra small screens (phones in portrait) */
 @media (max-width: 480px) {
-  .App {
+  .app-container {
     width: 100vw;
     height: 100vh;
   }

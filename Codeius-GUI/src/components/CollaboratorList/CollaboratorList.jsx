@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { socketService } from '../../services/socket';
+import socketService from '../../services/socket';
 import './CollaboratorList.css';
 
 const CollaboratorList = ({ sessionId }) => {

@@ -103,13 +103,24 @@ class ModelManager:
                 if provider_type.__name__ == 'CustomProvider':
                     provider_name = getattr(provider, 'name', 'custom')
 
-                current_key = f"{provider_name.lower()}_{i}"
-                if current_key == model_key:
-                    # Set the specific provider in the MultiProvider
-                    self.llm.set_provider(i)
-                    return f"Switched to {models[model_key]['name']} ({models[model_key]['provider']})"
+                tools[f"{provider_name.lower()}_{i}"] = {
+                    'name': server_name,
+                    'provider': provider_name,
+                    'instance': provider,
+                    'type': 'mcp'
+                }
+        return tools
+
+    def switch_model(self, model_key: str) -> str:
+        """Switch to a specific model by key"""
+        models = self.get_available_models()
+        for i, (key, model_info) in enumerate(models.items()):
+            if key == model_key:
+                # Set the specific provider in the MultiProvider
+                self.llm.set_provider(i)
+                return f"Switched to {model_info['name']} ({model_info['provider']})"
         return f"Model {model_key} not found. Use /models to see available models."
-        
+
     def chat(self, messages: list, max_tokens: int = 2048):
         """Call the LLM with the provided messages."""
         return self.llm.chat(messages, max_tokens)

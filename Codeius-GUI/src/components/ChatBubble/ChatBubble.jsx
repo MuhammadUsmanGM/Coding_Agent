@@ -1,4 +1,3 @@
-```javascript
 import React, { memo, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -158,4 +157,3 @@ const ChatBubble = memo(({
 });
 
 export default ChatBubble;
-```

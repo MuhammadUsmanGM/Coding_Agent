@@ -11,6 +11,7 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
   const [cwd, setCwd] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [charCount, setCharCount] = useState(inputValue?.length || 0);
+  const [isShellMode, setIsShellMode] = useState(false);
   const textareaRef = useRef(null);
 
   // Use the forwarded ref to access the textarea
@@ -246,7 +247,7 @@ const InputField = forwardRef(({ setMessages, messages, inputValue, setInputValu
       localStorage.setItem('current_session_id', sessionId);
       
       socketService.emit('start_stream', {
-        prompt: trimmedInput,
+        prompt: currentInput,
         session_id: sessionId
       });
     } catch (error) {
