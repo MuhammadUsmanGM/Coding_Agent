@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./src/codeius
+    container_name: codeius-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/codeius
+      - FLASK_ENV=production
+    depends_on:
+      - mongo
+    networks:
+      - codeius-network
+
+  frontend:
+    build: ./Codeius-GUI
+    container_name: codeius-frontend
+    ports:
+      - "8090:80"
+    depends_on:
+      - backend
+    networks:
+      - codeius-network
+
+  mongo:
+    image: mongo:latest
+    container_name: codeius-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - codeius-network
+
+networks:
+  codeius-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

@@ -1,0 +1,192 @@
+.input-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 700px;
+  z-index: 9998;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Ensure it doesn't overflow on small screens */
+  min-width: 280px;
+}
+
+/* Adjust input field position when sidebar is open */
+body.sidebar-open .input-container {
+  transform: translateX(calc(-50% + 150px)); /* Move input field to the right by half of the sidebar width */
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .input-container {
+    width: 95%;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  body.sidebar-open .input-container {
+    transform: translateX(-50%); /* On mobile, don't adjust position */
+  }
+}
+
+/* Small screens (phones in landscape) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .input-container {
+    width: 90%;
+    max-width: 600px;
+  }
+}
+
+/* Responsive: handle sidebar effect on smaller screens */
+@media (max-width: 768px) {
+  body.sidebar-open .input-container {
+    transform: translateX(-50%);
+  }
+}
+  
+  .input-field {
+    width: 100%;
+    padding: 16px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+    background: rgba(10, 25, 47, 0.6);
+    backdrop-filter: blur(12px);
+    font-size: 1rem;
+    color: #fff;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 4px 12px rgba(255, 255, 255, 0.1);
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    resize: none !important;
+    line-height: 1.5;
+    overflow: hidden;
+    min-height: 58px; /* Only min-height, no height or max-height */
+    box-sizing: border-box; /* Add this to ensure padding is included */
+  }
+  .input-field::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .input-field {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .input-field:focus {
+    box-shadow:
+      0 8px 32px rgba(0, 114, 255, 0.4),
+      inset 0 4px 12px rgba(0, 114, 255, 0.2);
+    border-color: rgba(0, 114, 255, 0.5);
+    background: rgba(10, 25, 47, 0.8);
+  }
+  
+  .input-field::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+/* Shell Mode Styles */
+.input-field.shell-mode {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  border-color: rgba(255, 215, 0, 0.5); /* Gold color for shell */
+  background: rgba(20, 20, 20, 0.9);
+}
+
+.input-field.shell-mode:focus {
+  box-shadow:
+    0 8px 32px rgba(255, 215, 0, 0.3),
+    inset 0 4px 12px rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.8);
+}
+
+.input-field.shell-mode::placeholder {
+  color: rgba(255, 215, 0, 0.6);
+}
+
+/* CWD Display */
+.cwd-display {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+/* Input Wrapper */
+.input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-wrapper .input-field {
+  flex: 1;
+}
+
+/* Send Button */
+.send-button {
+  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 114, 255, 0.4);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(100, 100, 100, 0.5);
+}
+
+/* Input Footer */
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 12px;
+}
+
+.char-counter {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

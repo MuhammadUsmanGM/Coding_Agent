@@ -1,122 +1,199 @@
-# Codeius AI Agent Documentation
+# Codeius AI Coding Agent - Architecture Overview
 
-Welcome to the comprehensive documentation for the Codeius AI Coding Agent. This documentation is organized by component to help you understand and work with the various parts of the system.
+## Introduction
+Codeius is an advanced AI-powered coding assistant that helps developers with various programming tasks. It integrates with multiple LLM providers, offers a rich command-line interface, and provides a web-based GUI for enhanced user experience.
 
-## Directory Structure
+## Project Structure
 
 ```
-doc/
-├── agent_components/          # Core agent functionality
-│   ├── agent.md              # Main agent class
-│   ├── action_executor.md    # Action execution logic
-│   └── conversation_manager.md # Conversation management
-├── cli_components/            # Command-line interface
-│   └── cli.md                # CLI implementation
-├── llm_providers/             # LLM provider implementations
-│   ├── groq.md               # Groq API integration
-│   └── google.md             # Google Generative AI integration
-├── security_components/       # Security-related components
-│   └── security_manager.md   # Security management
-├── model_components/          # Model management
-│   └── model_manager.md      # Model switching and management
-├── utilities/                 # Utility components
-│   ├── file_ops.md           # Secure file operations
-│   ├── logger.md             # Logging system
-│   ├── error_handler.md      # Error handling system
-│   ├── context_manager.md    # Project context management
-│   ├── dashboard.md          # Dashboard implementation
-│   ├── git_ops.md            # Git operations
-│   └── config.md             # Configuration management
-├── server_components/         # External server components
-│   ├── automation_server.md  # Automation tasks (scaffolding, renaming, env management)
-│   ├── code_search_server.md # Code search functionality
-│   ├── config_manager_server.md # Config/credentials management
-│   ├── db_server.md          # Database operations (SQLite)
-│   ├── diff_server.md        # File/directory comparison
-│   ├── doc_search_server.md  # Documentation search
-│   ├── ocr_server.md         # OCR and image text extraction
-│   ├── package_inspector_server.md # Package inspection
-│   ├── refactor_server.md    # Code refactoring tools
-│   ├── self_doc_server.md    # Self-documentation updates
-│   ├── shell_server.md       # Shell command server
-│   ├── snippet_manager_server.md # Code snippets management
-│   ├── task_scheduler_server.md # Task automation and scheduling
-│   ├── viz_server.md         # Data visualization
-│   └── web_scraper_server.md # Web scraping functionality
-├── mcp_components/            # Model Context Protocol
-│   └── mcp_manager.md        # MCP management
-├── templates/                 # Project templates
-│   └── react_template.md     # React project template
-├── plugin_components/         # Plugin system
-│   └── plugin_manager.md     # Plugin management
-├── visualization_components/  # Data visualization
-│   └── visualization_manager.md # Visualization tools
-├── refactor_components/       # Code refactoring tools
-│   └── refactor_server.md    # Refactoring server
-├── search_components/         # Search functionality
-│   └── code_search_server.md # Code search server
-├── setup_guide.md             # Installation and setup guide
-├── custom_model_guide.md      # Custom model integration guide
-└── README.md                 # This file
+src/
+├── codeius/                # Main package
+│   ├── api/                # API server for backend services
+│   ├── cli/                # Command-line interface components
+│   ├── core/               # Core agent functionality
+│   ├── provider/           # LLM provider implementations
+│   ├── servers/            # MCP (Model Context Protocol) servers
+│   ├── templates/          # Project scaffolding templates
+│   ├── utils/              # Utility functions and helpers
+│   ├── __init__.py
+│   ├── cli.py              # Main CLI entry point
+│   ├── config.py           # Configuration management
+│   └── main.py             # Application entry point
+Codeius-GUI/               # React frontend application
+├── public/
+├── src/
+│   ├── components/         # UI components
+│   ├── services/           # API service functions
+│   ├── utils/              # Utility functions
+│   ├── App.jsx            # Main application component
+│   ├── index.jsx          # Application entry point
+│   └── App.css            # Main stylesheet
+docs/                     # Documentation
+├── agent_components/      # Agent-specific documentation
+├── cli_components/        # CLI-specific documentation
+├── llm_providers/         # LLM provider documentation
+├── mcp_components/        # MCP server documentation
+├── model_components/      # Model management documentation
+├── plugin_components/     # Plugin system documentation
+├── refactor_components/   # Refactoring tools documentation
+├── search_components/     # Search functionality documentation
+├── security_components/   # Security documentation
+├── server_components/     # Backend server documentation
+├── templates/             # Template documentation
+├── utilities/             # Utility documentation
+├── visualization_components/ # Visualization documentation
+├── git_controls/          # Git operations and GUI controls
+├── gui_components/        # GUI-specific components
+├── AGENT.md              # AI agent instructions
+├── LICENSE.md            # License information
+├── README.md             # Main documentation file
+├── quick_start_guide.md  # Quick start instructions
+├── setup_guide.md        # Setup guide
+├── usage_guide.md        # Usage guide
+├── security_guide.md     # Security guide
+├── troubleshooting_guide.md # Troubleshooting guide
+├── custom_model_guide.md # Custom model guide
+└── cli_commands.md       # CLI command reference
 ```
 
-## Component Categories
+## Core Architecture
 
-### Agent Components
-Core functionality for the AI agent including conversation management, action execution, and the main agent class.
+### 1. Agent System
+- **CodingAgent**: Main orchestrator that manages all services
+- **ModelManager**: Handles switching between different LLM providers
+- **ConversationManager**: Manages conversation history and context
+- **ActionExecutor**: Executes actions requested by the AI
+- **ContextManager**: Manages project context and file analysis
+- **SecurityManager**: Performs security scans and policy enforcement
+- **Performance Monitor**: Tracks operation performance and metrics
 
-### CLI Components
-Command-line interface elements that provide the user interaction layer.
+### 2. LLM Providers
+- **Google Provider**: Integration with Google's Gemini API
+- **Groq Provider**: Integration with Groq's API for fast inference
+- **Custom Provider**: Support for any OpenAI-compatible API
+- **MCP Providers**: Integration with internal MCP servers
 
-### LLM Providers
-Different AI model providers like Groq, Google, and custom endpoints.
+### 3. MCP (Model Context Protocol) Servers
+- **Code Runner**: Execute Python code in secure environment
+- **Filesystem**: Safe file read/write operations with validation
+- **DuckDuckGo Search**: Web search capabilities
+- **Code Search**: Search for functions, classes, and TODOs in codebase
+- **Shell**: Execute safe shell commands
+- **Testing**: Run automated tests
+- **Documentation Search**: Search local and online documentation
+- **Database**: Query local SQLite databases
+- **OCR**: Extract text from images
+- **Refactor**: Analyze and refactor code
+- **Diff**: Compare files and directories
+- **Automation**: Scaffolding, environment management, renaming
+- **Visualization**: Create plots and charts
+- **Self-Doc**: Auto-update documentation files
+- **Package Inspector**: Inspect packages and dependencies
+- **Snippet Manager**: Manage code snippets and templates
+- **Web Scraper**: Extract content from websites/files
+- **Config Manager**: Manage configuration files and credentials
+- **Task Scheduler**: Schedule tasks to run automatically
+- **Git Server**: Comprehensive version control operations (git status, add, commit, push, pull, clone, branch management, etc.)
 
-### Security Components
-Security measures including validation, sanitization, and access controls.
+### 4. User Interfaces
 
-### Model Components
-Components for managing different AI models and switching between them.
+#### Command-Line Interface (CLI)
+- Beautiful terminal UI with theming support
+- Multi-line input with syntax highlighting
+- Command history and context awareness
+- Keyboard shortcuts and special key combinations
+- Model switching capabilities
+- File operation commands
+- Git integration
+- Security scanning tools
 
-### Utilities
-General-purpose utilities for logging, configuration, file operations, etc.
+#### Web-Based GUI (React)
+- Modern React interface with rich components
+- Real-time chat interface for conversations
+- File upload and management
+- Code editor with syntax highlighting
+- Dashboard for analytics and metrics
+- Settings panel for configuration
+- Command palette for quick actions
+- Project explorer for file management
+- Git controls for version control operations
 
-### Server Components
-External server implementations for various tools and services.
+### 5. Security Features
+- Path traversal prevention
+- File type validation
+- Binary file detection
+- Workspace restriction
+- API key validation
+- Rate limiting
+- Plugin sandboxing
+- Input sanitization
+- Security policy management
+- Secrets detection
+- Vulnerability scanning
 
-### MCP Components
-Model Context Protocol implementations for tool integration.
+### 6. Plugin System
+- Extensible architecture for custom functionality
+- Plugin discovery and loading mechanism
+- Plugin lifecycle management
+- Secure execution environment
+- Plugin metadata and configuration
 
-### Templates
-Project scaffolding templates for different tech stacks.
+### 7. Performance Features
+- API response caching
+- Rate limiting
+- Asynchronous operations
+- Memory management
+- Conversation history limiting
+- Efficient file operations
+- Performance monitoring
 
-### Plugin Components
-Extensibility system for adding custom functionality.
+### 8. Configuration Management
+- Environment variable support
+- YAML configuration files
+- Model-specific settings
+- Theme customization
+- Key binding customization
+- Project-specific preferences
 
-### Visualization Components
-Data visualization and charting capabilities.
+## Integration Points
 
-### Refactor Components
-Code analysis and refactoring tools.
+### Backend API
+- Flask-based REST API
+- WebSocket support for real-time features
+- CORS enabled for cross-origin requests
+- Session management
+- Authentication mechanisms
+- File upload handling
 
-### Search Components
-Code search and indexing functionality.
+### Frontend Integration
+- React-based single-page application
+- REST API communication
+- WebSocket connections
+- State management with React hooks
+- Component-based architecture
+- Responsive design
 
-## Getting Started
+## Development Workflow
+1. User sends request to CLI or web interface
+2. Request processed by the CodingAgent
+3. Agent selects appropriate model/provider
+4. Response analyzed for required actions
+5. Actions executed using available tools
+6. Results returned to user interface
+7. Conversation history updated
 
-To understand the system, start with the main components:
+## Deployment Options
+- Standalone CLI application
+- Web-based GUI application
+- Docker container deployment
+- Cloud deployment with scaling
+- Local installation via pip
 
-1. [Setup Guide](setup_guide.md) - Complete installation and configuration instructions
-2. [Agent Component](agent_components/agent.md) - The core of the system
-3. [CLI Component](cli_components/cli.md) - The user interface
-4. [Model Manager](model_components/model_manager.md) - How models are managed
-5. [Custom Model Guide](custom_model_guide.md) - Adding custom AI models
-6. [Security Manager](security_components/security_manager.md) - Security measures
-
-## Contributing
-
-When contributing to the documentation, please follow the existing structure and ensure each component documentation includes:
-
-- Overview of the component's purpose
-- Key classes and functions
-- Dependencies and usage context
-- Any important features or capabilities
+## Technologies Used
+- Python 3.11+
+- React 18+
+- Flask for backend APIs
+- Rich for CLI interfaces
+- WebSockets for real-time features
+- MongoDB for data storage
+- Docker for containerization

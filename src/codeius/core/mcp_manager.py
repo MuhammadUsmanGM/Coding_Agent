@@ -107,6 +107,11 @@ class MCPServerManager:
                         "enabled": True,
                         "endpoint": "http://localhost:10000",
                         "capabilities": ["diff", "comparison", "file-comparison"]
+                    },
+                    "git": {
+                        "enabled": True,
+                        "endpoint": "http://localhost:10100",
+                        "capabilities": ["git", "version-control", "push", "pull", "clone", "branch"]
                     }
                 }
             }

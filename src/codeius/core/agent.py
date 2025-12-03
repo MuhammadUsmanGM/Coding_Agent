@@ -174,20 +174,16 @@ class CodingAgent:
             "   {\"type\": \"read_error\",        \"pid\": 123},\n"
             "   {\"type\": \"stop_process\",      \"pid\": 123}\n"
             " ]\n"
-            "}\n"
+            "}\n\n"
             "If only a conversation or non-code answer is needed, reply conversationally."
         )
 
-    @cached(cache)
-    def ask(self, prompt: str, max_tokens: Optional[int] = None) -> str:
+    def ask(self, prompt: str, max_tokens: Optional[int] = None):
         """
-        Process user input and return agent response.
-
-        Composes a dialogue with the LLM, processes the response for actions,
-        and manages the conversation state.
+        Process a user prompt and return the agent's response.
 
         Args:
-            prompt: The user's input prompt to process
+            prompt: The user's input prompt
             max_tokens: Optional maximum number of tokens for the response
                         (defaults to config value if not provided)
 
@@ -213,51 +209,42 @@ class CodingAgent:
         duration = time.time() - start_time
         perf_monitor.record_operation("llm_chat", duration, success)
 
+        # Add to conversation history
+        self.conversation_manager.add_message("user", prompt)
 
         # Try to parse/action JSON; else conversational reply
-        result, performed = self.action_executor.execute_actions(reply, self.search_provider)
-        response = result if performed else reply
-
-        # Add messages to conversation
-        self.conversation_manager.add_message("user", prompt)
-        self.conversation_manager.add_message("assistant", response)
-
-        # Save the conversation to history
-        self.conversation_manager.save_conversation(prompt, response)
-
-        # Log the activity
-        agent_logger.log_agent_activity(prompt, response, [])
-
-        return response
+        result, executed = self.action_executor.execute_actions(reply, self.search_provider)
+        if executed:
+            self.conversation_manager.add_message("assistant", result)
+            return result
+        else:
+            self.conversation_manager.add_message("assistant", reply)
+            return reply
 
     def reset_history(self) -> None:
-        """
-        Reset conversation history.
-
-        Clears all previous conversation history, starting fresh.
-        """
+        """Reset the conversation history."""
         self.conversation_manager.reset_history()
+
+    def list_custom_models(self) -> Dict[str, Any]:
+        """
+        Get list of custom models.
+
+        Returns:
+            Dictionary containing all custom model information.
+        """
+        return self.model_manager.list_custom_models()
 
     def add_custom_model(self, name: str, api_key: str, base_url: str, model: str) -> bool:
         """
         Add a custom model to the agent.
 
         Args:
-            name: The name for the custom model
-            api_key: The API key for the model provider
-            base_url: The base URL for the model API
-            model: The specific model identifier
+            name: Name for the custom model
+            api_key: API key for the model
+            base_url: Base URL for the API
+            model: Model identifier
 
         Returns:
-            Boolean indicating whether the model was added successfully
+            True if the model was added successfully, False otherwise
         """
         return self.model_manager.add_custom_model(name, api_key, base_url, model)
-
-    def list_custom_models(self) -> Dict[str, Any]:
-        """
-        List all custom models.
-
-        Returns:
-            Dictionary containing all custom model information.
-        """
-        return self.model_manager.list_custom_models()

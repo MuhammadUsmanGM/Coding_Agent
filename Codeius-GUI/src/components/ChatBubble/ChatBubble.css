@@ -1,0 +1,298 @@
+.chat-bubble {
+  display: flex;
+  margin-bottom: 25px; /* Reduced margin to accommodate buttons below */
+  max-width: 80%;
+  animation: bubbleFadeIn 0.3s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  position: relative;
+}
+
+@keyframes bubbleFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.user-bubble {
+  align-self: flex-end;
+  margin-left: auto;
+  width: fit-content;
+  max-width: 65%; /* Further reduced max-width to ensure more space on the sides */
+  /* Ensure the bubble stays within screen bounds on the right */
+  margin-right: 50px; /* Further increased margin for more prominent spacing */
+  /* Additional constraint to prevent overflow */
+  align-items: flex-end;
+}
+
+.ai-bubble {
+  align-self: flex-start;
+  margin-right: auto;
+  width: fit-content;
+  max-width: 65%; /* Reduced max-width to match user bubbles */
+  /* Ensure the bubble stays within screen bounds on the left */
+  margin-left: 50px; /* Increased margin to match user bubbles */
+  /* Additional constraint to prevent overflow */
+  align-items: flex-start;
+}
+
+.bubble-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0; /* Fix potential flexbox sizing issues */
+}
+
+.bubble-text {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 1rem;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  word-wrap: break-word;
+}
+
+.user-bubble .bubble-text {
+  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.ai-bubble .bubble-text {
+  background: rgba(25, 40, 65, 0.8);
+  color: #e0f7fa;
+  border-bottom-left-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.bubble-timestamp {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.user-bubble .bubble-timestamp {
+  text-align: right;
+  padding-right: 2px;
+  margin-top: 2px;
+}
+
+.ai-bubble .bubble-timestamp {
+  text-align: left;
+  padding-left: 2px;
+  margin-top: 2px;
+}
+
+/* Code block styling */
+.code-block-container {
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  font-family: 'Courier New', monospace;
+}
+
+.code-block {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.code-block code {
+  font-family: 'Courier New', monospace;
+  color: #e0f7fa;
+  display: block;
+  width: 100%;
+}
+
+.inline-code {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #4fc3f7;
+  border: 1px solid rgba(100, 150, 255, 0.3);
+}
+
+/* Responsive: adjust bubbles on smaller screens */
+@media (max-width: 480px) {
+  .chat-bubble {
+    max-width: 85%; /* Wider bubbles on small screens */
+    margin-bottom: 12px;
+  }
+  
+  .user-bubble {
+    margin-right: 10px; /* Less margin for small screens */
+    max-width: 80%;
+  }
+  
+  .ai-bubble {
+    margin-left: 10px; /* Less margin for small screens */
+    max-width: 80%;
+  }
+  
+  .bubble-text {
+    padding: 12px 16px; /* Adjust padding for small screens */
+    font-size: 0.9rem; /* Slightly smaller text */
+  }
+  
+  .bubble-timestamp {
+    font-size: 0.6rem; /* Smaller timestamp on small screens */
+  }
+
+  .code-block {
+    padding: 10px; /* Less padding for small screens */
+    font-size: 0.8rem; /* Slightly smaller code text */
+  }
+}
+
+/* Small screens landscape */
+@media (min-width: 481px) and (max-width: 768px) {
+  .chat-bubble {
+    max-width: 75%;
+  }
+  
+  .bubble-text {
+    font-size: 0.95rem; /* Slightly smaller text */
+  }
+}
+
+/* Large screens */
+@media (min-width: 1025px) {
+  .chat-bubble {
+    max-width: 70%; /* Slightly narrower on large screens for better readability */
+  }
+}
+
+/* System Message Styling */
+.system-bubble {
+  align-self: center;
+  margin: 10px auto;
+  max-width: 90%;
+  width: fit-content;
+}
+
+.system-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.system-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.system-text {
+  white-space: pre-wrap;
+}
+
+/* Code Block Enhancements */
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.code-language {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.copy-button {
+  background: rgba(0, 114, 255, 0.2);
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  color: #4fc3f7;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.copy-button:hover {
+  background: rgba(0, 114, 255, 0.3);
+  border-color: rgba(0, 114, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.copy-button:active {
+  transform: translateY(0);
+}
+
+/* Markdown Enhancements */
+.bubble-text h1, .bubble-text h2, .bubble-text h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.bubble-text h1 { font-size: 1.5rem; }
+.bubble-text h2 { font-size: 1.3rem; }
+.bubble-text h3 { font-size: 1.1rem; }
+
+.bubble-text ul, .bubble-text ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.bubble-text li {
+  margin: 4px 0;
+}
+
+.bubble-text a {
+  color: #4fc3f7;
+  text-decoration: underline;
+}
+
+.bubble-text a:hover {
+  color: #81d4fa;
+}
+
+.bubble-text table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.bubble-text th, .bubble-text td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  text-align: left;
+}
+
+.bubble-text th {
+  background: rgba(0, 114, 255, 0.2);
+  font-weight: 600;
+}
+
+.bubble-text blockquote {
+  border-left: 3px solid rgba(0, 114, 255, 0.5);
+  padding-left: 12px;
+  margin: 10px 0;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}

@@ -1,0 +1,35 @@
+.history-icon-btn {
+  background: rgba(0, 114, 255, 0.2);
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #87ceeb;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding: 0;
+  z-index: 10001; /* Ensure it's clickable */
+}
+
+.history-icon-btn:hover {
+  background: rgba(0, 114, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 114, 255, 0.5);
+}
+
+.history-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.history-icon-svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none; /* Let clicks pass through to button */
+}

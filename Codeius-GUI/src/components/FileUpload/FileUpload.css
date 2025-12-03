@@ -1,0 +1,135 @@
+.file-upload-container {
+  margin-bottom: 10px;
+}
+
+.uploaded-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 114, 255, 0.1);
+  border: 1px solid rgba(0, 114, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: #fff;
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-icon {
+  font-size: 1rem;
+}
+
+.file-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.remove-file-btn:hover {
+  color: #f44336;
+}
+
+.file-drop-zone {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.file-drop-zone:hover {
+  border-color: rgba(0, 114, 255, 0.5);
+  background: rgba(0, 114, 255, 0.05);
+}
+
+.file-drop-zone.dragging {
+  border-color: #0072ff;
+  background: rgba(0, 114, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.drop-zone-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.upload-icon {
+  font-size: 1.2rem;
+}
+
+.upload-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+/* Light theme */
+[data-theme="light"] .file-chip {
+  background: rgba(0, 114, 255, 0.1);
+  border-color: rgba(0, 114, 255, 0.3);
+  color: #1a202c;
+}
+
+[data-theme="light"] .file-size {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .remove-file-btn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .file-drop-zone {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .file-drop-zone:hover {
+  border-color: rgba(0, 114, 255, 0.5);
+  background: rgba(0, 114, 255, 0.05);
+}
+
+[data-theme="light"] .upload-text {
+  color: rgba(0, 0, 0, 0.6);
+}

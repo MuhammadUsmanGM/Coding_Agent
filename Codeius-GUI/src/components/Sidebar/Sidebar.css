@@ -1,0 +1,484 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+  box-shadow: 8px 0 40px rgba(0, 0, 0, 0.5);
+  z-index: 9995; /* Lower than navbar but higher than content */
+  display: flex;
+  flex-direction: column;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 70px; /* Account for navbar height */
+  height: calc(100vh - 70px); /* Adjust height to account for navbar */
+  /* Additional overflow prevention */
+  box-sizing: border-box;
+  transform: translateX(-100%);
+  opacity: 0; /* Start fully transparent */
+}
+
+/* Ensure the edge trigger is visible when sidebar is closed */
+.sidebar:not(.open) {
+  z-index: 9993; /* Lower than edge trigger when closed */
+}
+
+.sidebar.open {
+  transform: translateX(0); /* Slide in to view */
+  opacity: 1; /* And fade in */
+  box-shadow: 8px 0 40px rgba(0, 0, 0, 0.7);
+  /* Explicitly prevent overflow when open */
+  overflow: hidden;
+}
+
+/* Custom scrollbar styling */
+.sidebar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(rgba(0, 114, 255, 0.7), rgba(0, 198, 255, 0.7));
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(rgba(0, 198, 255, 0.7), rgba(0, 114, 255, 0.7));
+}
+
+/* Firefox scrollbar styling */
+.sidebar-content {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: rgba(0, 114, 255, 0.7) rgba(0, 0, 0, 0.2);  /* Firefox */
+}
+
+.sidebar-header {
+  padding: 25px 50px 25px 20px; /* Add padding on the right for the close button */
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  /* Prevent any overflow */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebar-logo {
+  height: 60px;
+  width: 60px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #0072ff, #003da5); /* Darker blue gradient */
+  padding: 5px;
+  box-shadow: 0 0 20px rgba(0, 114, 255, 0.5);
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px rgba(0, 114, 255, 0.5);
+  }
+  to {
+    box-shadow: 0 0 25px rgba(0, 114, 255, 0.8);
+  }
+}
+
+.sidebar-title {
+  color: #87ceeb;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.sidebar-content {
+  flex: 1;
+  padding: 20px;
+  /* Prevent content overflow */
+  width: 100%;
+  box-sizing: border-box;
+  /* Allow natural height without forcing overflow */
+  min-height: 0;
+}
+
+/* Custom scrollbar for sidebar content */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(#0072ff, #00c6ff);
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(#00c6ff, #0072ff);
+}
+
+.commands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Reduced space between command items */
+  /* Prevent overflow */
+  width: 100%;
+  overflow-y: auto; /* Allow scrolling for many commands */
+  overflow-x: hidden; /* Prevent horizontal overflow */
+  box-sizing: border-box;
+  max-height: calc(100vh - 240px); /* Increase space to ensure commands aren't cramped */
+  padding-right: 8px; /* Account for scrollbar space */
+}
+
+.command-item {
+  background: rgba(25, 40, 65, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  border-radius: 10px;
+  padding: 12px; /* Reduced padding */
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer; /* Indicate that it's clickable */
+  min-height: 70px; /* Reduced minimum height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.command-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.1), transparent);
+  transition: left 0.5s;
+  z-index: 0;
+}
+
+.command-item:hover::before {
+  left: 100%;
+}
+
+.command-item:hover {
+  background: rgba(30, 50, 80, 0.8);
+  transform: translateY(-3px);
+  border-color: rgba(100, 150, 255, 0.4);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.command-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px; /* Reduced margin */
+  position: relative;
+  z-index: 1;
+  /* Prevent overflow */
+  overflow: hidden;
+}
+
+.command-cmd {
+  font-family: 'Courier New', monospace;
+  color: #4fc3f7;
+  font-weight: 600;
+  font-size: 0.9rem; /* Reduced font size */
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 6px; /* Reduced padding */
+  border-radius: 4px; /* Slightly smaller border radius */
+  text-shadow: 0 0 5px rgba(79, 195, 247, 0.3);
+  /* Allow text wrapping to prevent overflow */
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.command-desc {
+  color: #b0bec5;
+  font-size: 0.8rem; /* Reduced font size */
+  line-height: 1.3; /* Tighter line height */
+  position: relative;
+  z-index: 1;
+  /* Prevent overflow */
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9994; /* Behind sidebar but above main content */
+  /* Remove blur filter to allow interaction with main content */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.sidebar.open ~ .sidebar-backdrop {
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 9998;
+  background: rgba(10, 25, 47, 0.8);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  color: #87ceeb;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  flex-direction: column; /* Stack the lines vertically */
+  gap: 5px; /* Space between lines */
+  padding: 0; /* Remove any default padding */
+}
+
+.sidebar-toggle:hover {
+  background: rgba(30, 50, 80, 0.9);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 114, 255, 0.4);
+  border-color: rgba(100, 150, 255, 0.6);
+}
+
+.sidebar-toggle.open {
+  position: fixed;
+  left: 320px; /* Position to the right of the open sidebar */
+  background: rgba(200, 50, 50, 0.8);
+  color: white;
+  z-index: 9999;
+}
+
+/* Style for the hamburger lines in the edge trigger */
+.sidebar-edge-trigger {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  width: 40px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(10, 25, 47, 0.8), rgba(26, 54, 93, 0.9));
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  z-index: 9996;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* Ensure the button can receive mouse events */
+}
+
+.sidebar-edge-trigger:hover {
+  background: linear-gradient(135deg, rgba(30, 50, 80, 0.9), rgba(50, 80, 120, 0.9));
+  transform: translateY(-50%) translateX(0);
+  box-shadow: 8px 0 20px rgba(0, 114, 255, 0.5);
+}
+
+.trigger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  border-radius: 2px;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* Hover animations for the trigger lines */
+.sidebar-edge-trigger:hover .trigger-line:nth-child(1) {
+  transform: translateX(5px) scaleX(0.8);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+.sidebar-edge-trigger:hover .trigger-line:nth-child(2) {
+  transform: scaleX(1.2);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+.sidebar-edge-trigger:hover .trigger-line:nth-child(3) {
+  transform: translateX(3px) scaleX(0.9);
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+}
+
+/* Click animations for the trigger lines */
+.sidebar-edge-trigger:active .trigger-line:nth-child(1),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+  width: 22px;
+}
+
+.sidebar-edge-trigger:active .trigger-line:nth-child(2),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+
+.sidebar-edge-trigger:active .trigger-line:nth-child(3),
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+  width: 22px;
+}
+
+/* Make sure the trigger becomes an X when sidebar is open */
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+  width: 22px;
+}
+
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+
+.sidebar.open ~ .sidebar-edge-trigger .trigger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+  width: 22px;
+}
+
+/* Scrollbar styling */
+.sidebar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(#0072ff, #00c6ff);
+  border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(#00c6ff, #0072ff);
+}
+
+/* Close button for sidebar */
+.sidebar-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px; /* Ensure it stays circular */
+  min-height: 30px; /* Ensure it stays circular */
+  border-radius: 50%; /* Make it perfectly round */
+  background: linear-gradient(135deg, rgba(0, 114, 255, 0.7), rgba(0, 198, 255, 0.7)); /* Blue gradient */
+  color: white;
+  border: none;
+  font-size: 18px; /* Adjust font size to fit better */
+  line-height: 1; /* Ensure proper vertical alignment */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10000;
+  box-shadow: 0 0 10px rgba(0, 114, 255, 0.3);
+  padding: 0; /* Remove any default padding */
+}
+
+.sidebar-close-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 114, 255, 0.9), rgba(0, 198, 255, 0.9)); /* Enhanced blue gradient */
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(0, 114, 255, 0.5);
+}
+
+/* Edge trigger button */
+.sidebar-edge-trigger {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  width: 40px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(10, 25, 47, 0.8), rgba(26, 54, 93, 0.9));
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  z-index: 9996;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+  pointer-events: auto; /* Ensure the button can receive mouse events */
+}
+
+.sidebar-edge-trigger:hover {
+  background: linear-gradient(135deg, rgba(30, 50, 80, 0.9), rgba(50, 80, 120, 0.9));
+  transform: translateY(-50%) translateX(0);
+  box-shadow: 8px 0 20px rgba(0, 114, 255, 0.5);
+}
+
+.trigger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+    left: -280px;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-edge-trigger {
+    width: 35px;
+    height: 70px;
+  }
+
+  .trigger-line {
+    width: 16px;
+  }
+}

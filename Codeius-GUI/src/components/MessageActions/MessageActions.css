@@ -1,0 +1,85 @@
+
+.message-actions-container {
+  position: relative;
+  display: inline-block; /* Ensure it doesn't affect layout */
+}
+
+.message-actions {
+  position: absolute;
+  bottom: -35px; /* Positioned below the bubble */
+  right: 0;
+  display: flex;
+  gap: 6px;
+  background: transparent; /* Removed background */
+  border: none; /* Removed border */
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: none; /* Removed shadow to reduce darkness */
+  z-index: 10;
+  opacity: 1;
+  pointer-events: all;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  padding: 0;
+  color: #64b5f6; /* Consistent blue color for all buttons */
+}
+
+.action-btn:hover {
+  background: rgba(100, 181, 246, 0.2);
+  border-color: rgba(100, 181, 246, 0.5);
+  transform: scale(1.1);
+  color: #90caf9; /* Lighter blue on hover */
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+/* All buttons use the same style now */
+.copy-btn:hover,
+.regenerate-btn:hover,
+.edit-btn:hover {
+  background: rgba(100, 181, 246, 0.2);
+  border-color: rgba(100, 181, 246, 0.5);
+  transform: scale(1.1);
+  color: #90caf9;
+}
+
+/* Light theme */
+[data-theme="light"] .message-actions {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .action-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .action-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}

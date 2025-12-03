@@ -1,0 +1,101 @@
+.shared-session-container {
+  min-height: 100vh;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+}
+
+.shared-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.shared-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.shared-header .logo img {
+  width: 32px;
+  height: 32px;
+}
+
+.try-btn {
+  background-color: #007acc;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.try-btn:hover {
+  background-color: #0062a3;
+}
+
+.shared-chat-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.shared-bubble {
+  margin-bottom: 24px;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+}
+
+.shared-bubble.user {
+  border-left: 4px solid #007acc;
+}
+
+.shared-bubble.ai {
+  border-left: 4px solid #4ec9b0;
+}
+
+.bubble-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.sender-name {
+  font-weight: 600;
+  color: #ccc;
+}
+
+.markdown-content {
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.markdown-content pre {
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.shared-loading, .shared-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #888;
+  background-color: #1e1e1e;
+}

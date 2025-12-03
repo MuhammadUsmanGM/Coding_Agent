@@ -1,0 +1,133 @@
+.error-boundary {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 25, 47, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 10001;
+}
+
+.error-content {
+  max-width: 600px;
+  padding: 40px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.error-content h2 {
+  color: #ff6b6b;
+  margin: 0 0 16px 0;
+  font-size: 1.8rem;
+}
+
+.error-message {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 24px 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.error-details {
+  margin: 20px 0;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.error-details summary {
+  color: #87ceeb;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.error-details pre {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  overflow-x: auto;
+  margin: 0;
+  padding: 8px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.error-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.retry-btn {
+  background: linear-gradient(135deg, #0072ff, #00c6ff);
+  color: white;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.4);
+}
+
+.reload-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.reload-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Light theme */
+[data-theme="light"] .error-boundary {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .error-content {
+  background: white;
+  border-color: rgba(255, 100, 100, 0.3);
+}
+
+[data-theme="light"] .error-content h2 {
+  color: #d32f2f;
+}
+
+[data-theme="light"] .error-message {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .error-details {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .error-details pre {
+  color: rgba(0, 0, 0, 0.6);
+}

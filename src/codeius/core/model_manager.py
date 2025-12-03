@@ -96,7 +96,14 @@ class ModelManager:
                 # Handle MCP provider specifically
                 server_name = getattr(provider, 'server_name', 'mcp_server')
                 provider_name = 'mcp'
-                tools[f"mcp_{i}"] = {
+                provider_type = type(provider)
+                provider_name = provider_type.__name__.replace('Provider', '')
+
+                # Special handling for custom providers
+                if provider_type.__name__ == 'CustomProvider':
+                    provider_name = getattr(provider, 'name', 'custom')
+
+                tools[f"{provider_name.lower()}_{i}"] = {
                     'name': server_name,
                     'provider': provider_name,
                     'instance': provider,
@@ -107,23 +114,13 @@ class ModelManager:
     def switch_model(self, model_key: str) -> str:
         """Switch to a specific model by key"""
         models = self.get_available_models()
-        if model_key in models:
-            # Find the provider index corresponding to the model key
-            for i, provider in enumerate(self.providers):
-                provider_type = type(provider)
-                provider_name = provider_type.__name__.replace('Provider', '')
-
-                # Special handling for custom providers
-                if provider_type.__name__ == 'CustomProvider':
-                    provider_name = getattr(provider, 'name', 'custom')
-
-                current_key = f"{provider_name.lower()}_{i}"
-                if current_key == model_key:
-                    # Set the specific provider in the MultiProvider
-                    self.llm.set_provider(i)
-                    return f"Switched to {models[model_key]['name']} ({models[model_key]['provider']})"
+        for i, (key, model_info) in enumerate(models.items()):
+            if key == model_key:
+                # Set the specific provider in the MultiProvider
+                self.llm.set_provider(i)
+                return f"Switched to {model_info['name']} ({model_info['provider']})"
         return f"Model {model_key} not found. Use /models to see available models."
-        
+
     def chat(self, messages: list, max_tokens: int = 2048):
         """Call the LLM with the provided messages."""
         return self.llm.chat(messages, max_tokens)

@@ -1,0 +1,351 @@
+.git-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.git-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(0, 114, 255, 0.2);
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.git-status-indicator:hover {
+  background: rgba(0, 114, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.git-status-text {
+  font-size: 0.85rem;
+  color: #87ceeb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.git-btn-group {
+  display: flex;
+  gap: 8px;
+  margin-left: auto; /* Push to the right */
+  flex-wrap: nowrap; /* Don't wrap by default */
+}
+
+.git-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(0, 114, 255, 0.2);
+  border: 1px solid rgba(0, 114, 255, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  min-height: 40px;
+  color: #87ceeb;
+}
+
+.git-btn:hover {
+  background: rgba(0, 114, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.git-btn-icon {
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+
+.git-btn-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Specific button styles */
+.git-add-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: rgba(46, 204, 113, 0.5);
+}
+
+.git-commit-btn:hover {
+  background: rgba(155, 89, 182, 0.3);
+  border-color: rgba(155, 89, 182, 0.5);
+}
+
+.git-push-btn:hover {
+  background: rgba(52, 152, 219, 0.3);
+  border-color: rgba(52, 152, 219, 0.5);
+}
+
+.git-pull-btn:hover {
+  background: rgba(241, 196, 15, 0.3);
+  border-color: rgba(241, 196, 15, 0.5);
+}
+
+.git-more-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  min-height: 40px;
+  color: #e74c3c;
+}
+
+.git-more-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  transform: scale(1.05);
+}
+
+/* Dropdown menu for additional Git operations */
+.git-menu-toggle {
+  position: relative;
+}
+
+.git-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(25, 40, 65, 0.95);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  min-width: 150px;
+}
+
+.git-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #87ceeb;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.git-dropdown-menu button:hover {
+  background: rgba(0, 114, 255, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .git-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .git-status-indicator {
+    min-width: auto;
+    padding: 4px 8px;
+  }
+
+  .git-status-text {
+    display: none;
+  }
+
+  .git-btn-label {
+    display: none;
+  }
+}
+
+.git-controls-container {
+  position: absolute;
+  top: 100px; /* Position below navbar */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 10px 20px;
+  max-width: 800px; /* Match the max-width of chat bubbles */
+  margin: 0 auto;
+  z-index: 15; /* Higher than chat container and message actions */
+}
+
+/* Commit Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+}
+
+.commit-modal {
+  background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+  width: 90%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #87ceeb;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #87ceeb;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff5252;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body label {
+  display: block;
+  color: #b0bec5;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.commit-message-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  box-sizing: border-box;
+}
+
+.commit-message-input:focus {
+  outline: none;
+  border-color: rgba(100, 180, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(100, 180, 255, 0.2);
+}
+
+.operation-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-top: 5px;
+}
+
+.operation-input:focus {
+  outline: none;
+  border-color: rgba(100, 180, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(100, 180, 255, 0.2);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px 20px 20px;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.9rem;
+}
+
+.cancel-btn {
+  background: rgba(200, 50, 50, 0.2);
+  color: #ff8a80;
+  border: 1px solid rgba(200, 50, 50, 0.4);
+}
+
+.cancel-btn:hover {
+  background: rgba(220, 70, 70, 0.3);
+}
+
+.commit-submit-btn {
+  background: rgba(0, 200, 100, 0.2);
+  color: #69f0ae;
+  border: 1px solid rgba(0, 200, 100, 0.4);
+}
+
+.commit-submit-btn:hover {
+  background: rgba(0, 220, 120, 0.3);
+}

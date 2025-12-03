@@ -1,0 +1,6 @@
+Timestamp: 2025-12-01T01:40:52.809524
+Prompt:
+sdk stands for 
+Response:
+SDK stands for Software Development Kit.
+

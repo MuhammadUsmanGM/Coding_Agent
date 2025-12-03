@@ -1,0 +1,166 @@
+.collaborator-container {
+  position: relative;
+}
+
+.collaborator-list {
+  display: flex;
+  align-items: center;
+  gap: -8px; /* Overlap avatars */
+  margin-right: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.collaborator-list:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.collaborator-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #007acc;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 2px solid #252526; /* Match navbar bg */
+  transition: transform 0.2s;
+  margin-right: -8px; /* Overlap */
+  position: relative;
+  z-index: 1;
+}
+
+.collaborator-more {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #333;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  border: 2px solid #252526;
+  margin-right: -8px;
+  z-index: 2;
+}
+
+.collaborator-count {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 16px; /* Adjusted for overlap */
+}
+
+/* Dropdown Styles */
+.collaborator-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 220px;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+  background-color: #252526;
+}
+
+.dropdown-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #2a2d2e;
+}
+
+.dropdown-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  margin-right: 10px;
+}
+
+.dropdown-name {
+  font-size: 0.9rem;
+  color: #ccc;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-badge {
+  font-size: 0.7rem;
+  background-color: #007acc;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.dropdown-footer {
+  padding: 10px;
+  border-top: 1px solid #333;
+  background-color: #252526;
+  display: flex;
+  justify-content: center;
+}
+
+.invite-btn {
+  width: 100%;
+  padding: 6px 12px;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.invite-btn:hover {
+  background-color: #0062a3;
+}
+
+.invite-btn:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+  color: #888;
+}

@@ -1,898 +1,447 @@
-import { useState, useEffect, useRef } from 'react';
-import './App.css';
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import Navbar from './components/Navbar/Navbar'
+import InputField from './components/InputField/InputField'
+import ChatBubble from './components/ChatBubble/ChatBubble'
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import StopButton from './components/StopButton/StopButton';
+import socketService from './services/socket';
+import { saveSessionMessages, getSessionMessages, getCurrentSessionId, loadMessages } from './utils/localStorage'
+import { useToast, ToastProvider } from './components/Toast/ToastContainer';
+import ConfirmationDialog from './components/ConfirmationDialog/ConfirmationDialog';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
+import './App.css'
 
-function App() {
-  const [messages, setMessages] = useState([
-    { id: 1, content: 'Hello! I\'m your Codeius AI assistant. How can I help you with your coding today?', sender: 'ai', timestamp: new Date() }
-  ]);
+import SearchModal from './components/SearchModal/SearchModal';
+import LoginPage from './components/LoginPage/LoginPage';
+import Sidebar from './components/Sidebar/Sidebar';
+import GitControls from './components/GitControls/GitControls';
+import Settings from './components/Settings/Settings';
+import HistoryModal from './components/HistoryModal/HistoryModal';
+import KeyboardShortcuts from './components/KeyboardShortcuts/KeyboardShortcuts';
+
+function AppContent() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [user, setUser] = useState(null);
+  
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [availableModels, setAvailableModels] = useState({});
-  const [currentModel, setCurrentModel] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [theme, setTheme] = useState('default');
+  const [currentModel, setCurrentModel] = useState(''); // Track current model
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showTour, setShowTour] = useState(false);
-  const [userPreferences, setUserPreferences] = useState({
-    fontSize: 'medium',
-    codeHighlighting: 'auto',
-    notifications: true,
-    autoScroll: true,
-    sidebarPosition: 'left'
-  });
-  const [showCodeEditor, setShowCodeEditor] = useState(false);
-  const [codeEditorContent, setCodeEditorContent] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const sessionId = useRef(`session_${Date.now()}`);
+
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const inputFieldRef = useRef(null);
+  const toast = useToast();
 
-  // Load available models and user preferences on component mount
+  // Focus input field when component mounts and when there are no messages (new chat)
   useEffect(() => {
-    fetchModels();
-    loadUserPreferences();
+    if (messages.length === 0) {
+      // Add a small delay to ensure the input field is rendered
+      setTimeout(() => {
+        if (inputFieldRef.current) {
+          inputFieldRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [messages.length]); // Only run when messages.length changes
 
-    // Show tour for first-time users
-    if (!localStorage.getItem('hasSeenTour')) {
-      setShowTour(true);
-      localStorage.setItem('hasSeenTour', 'true');
+  // Load messages on mount
+  useEffect(() => {
+    const currentSessionId = getCurrentSessionId();
+    const savedMessages = getSessionMessages(currentSessionId);
+    if (savedMessages && savedMessages.length > 0) {
+      setMessages(savedMessages);
+    } else {
+      // If no messages for the current session, initialize with empty array
+      setMessages([]);
     }
   }, []);
 
-  // Apply theme to document
+  // Function to open history modal
+  const openHistoryModal = () => {
+    setIsHistoryModalOpen(true);
+  };
+
+  // Function to close history modal
+  const closeHistoryModal = () => {
+    setIsHistoryModalOpen(false);
+  };
+
+  // Auto-save messages to localStorage
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('codeius-theme', theme);
-  }, [theme]);
+    const currentSessionId = getCurrentSessionId();
+    saveSessionMessages(currentSessionId, messages);
+  }, [messages]);
 
-  // Scroll to bottom of messages when it changes
-  useEffect(() => {
-    if (userPreferences.autoScroll) {
-      scrollToBottom();
-    }
-  }, [messages, userPreferences.autoScroll]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Message action handlers
+  const handleCopyMessage = (text) => {
+    navigator.clipboard.writeText(text);
   };
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+  const handleRegenerateMessage = async (messageId) => {
+    // Find the message to regenerate
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex === -1) return;
 
-  const fetchModels = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/models`);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`${response.status} - ${errorText}`);
-      }
-      const data = await response.json();
-      setAvailableModels(data.models);
+    // Find the user's prompt (previous message)
+    const userMessage = messages[messageIndex - 1];
+    if (!userMessage || userMessage.sender !== 'user') return;
 
-      // Set the first model as current if none is set
-      if (Object.keys(data.models).length > 0 && !currentModel) {
-        const firstModelKey = Object.keys(data.models)[0];
-        setCurrentModel(firstModelKey);
-      }
-    } catch (error) {
-      console.error('Error fetching models:', error);
-      // Add a message to the chat about the error
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        content: `⚠️ Backend server not available. Please make sure the Codeius backend is running. Error: ${error.message}`,
-        sender: 'system',
-        timestamp: new Date()
-      }]);
-    }
-  };
+    // Remove the AI message and regenerate
+    const updatedMessages = messages.filter(msg => msg.id !== messageId);
+    setMessages(updatedMessages);
 
-  const loadUserPreferences = () => {
-    const savedPrefs = localStorage.getItem('codeius-prefs');
-    if (savedPrefs) {
-      setUserPreferences(JSON.parse(savedPrefs));
-    }
-
-    const savedTheme = localStorage.getItem('codeius-theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  };
-
-  const saveUserPreferences = (prefs) => {
-    setUserPreferences(prefs);
-    localStorage.setItem('codeius-prefs', JSON.stringify(prefs));
-  };
-
-  const switchTheme = (themeName) => {
-    setTheme(themeName);
-    localStorage.setItem('codeius-theme', themeName);
-  };
-
-  const updatePreferences = (newPrefs) => {
-    const updatedPrefs = { ...userPreferences, ...newPrefs };
-    saveUserPreferences(updatedPrefs);
-  };
-
-  const openCodeEditor = (initialCode = '') => {
-    setCodeEditorContent(initialCode);
-    setShowCodeEditor(true);
-  };
-
-  const insertCode = (code) => {
-    setInputValue(prev => prev + code);
-  };
-
-  const sendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
-
-    // Handle special commands
-    if (inputValue.startsWith('/')) {
-      if (inputValue === '/clear') {
-        setMessages([]);
-        setInputValue('');
-        return;
-      } else if (inputValue === '/help') {
-        const helpMessage = {
-          id: Date.now(),
-          content: [
-            'Available commands:',
-            '/help - Show available commands',
-            '/models - List AI models',
-            '/switch [key] - Switch AI model',
-            '/context - Show project context',
-            '/clear - Clear chat',
-            '/test - Run a test command',
-            '/themes - Show available themes',
-            '/settings - Open settings panel',
-            '/history - Show conversation history',
-            '/editor - Open code editor',
-          ].join('\n'),
-          sender: 'ai',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, helpMessage]);
-        setInputValue('');
-        return;
-      } else if (inputValue === '/themes') {
-        const themesMessage = {
-          id: Date.now(),
-          content: 'Available themes: default, light, blue, green. Use /theme [name] to switch.',
-          sender: 'ai',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, themesMessage]);
-        return;
-      } else if (inputValue.startsWith('/theme ')) {
-        const themeName = inputValue.split(' ')[1];
-        const availableThemes = ['default', 'light', 'blue', 'green'];
-        if (availableThemes.includes(themeName)) {
-          switchTheme(themeName);
-          const themeMessage = {
-            id: Date.now(),
-            content: `Theme switched to ${themeName}`,
-            sender: 'system',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, themeMessage]);
-        } else {
-          const errorMessage = {
-            id: Date.now(),
-            content: `Invalid theme: ${themeName}. Available themes: ${availableThemes.join(', ')}`,
-            sender: 'system',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-        }
-        setInputValue('');
-        return;
-      } else if (inputValue === '/settings') {
-        setShowSettings(true);
-        setInputValue('');
-        return;
-      } else if (inputValue === '/history') {
-        setShowHistory(true);
-        setInputValue('');
-        return;
-      } else if (inputValue === '/editor') {
-        openCodeEditor('');
-        setInputValue('');
-        return;
-      } else if (inputValue.startsWith('/switch ')) {
-        // Handle model switching
-        const modelKey = inputValue.split(' ')[1];
-        if (modelKey && availableModels[modelKey]) {
-          try {
-            const response = await fetch(`${API_BASE_URL}/switch_model`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model_key: modelKey }),
-            });
-
-            if (!response.ok) {
-              throw new Error(`Failed to switch model: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            const systemMessage = {
-              id: Date.now() + 1,
-              content: data.result,
-              sender: 'system',
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, systemMessage]);
-            setCurrentModel(modelKey);
-          } catch (error) {
-            const errorMessage = {
-              id: Date.now() + 1,
-              content: `Error switching model: ${error.message}`,
-              sender: 'system',
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorMessage]);
-          }
-        } else {
-          const errorMessage = {
-            id: Date.now() + 1,
-            content: `Invalid model key: ${modelKey}. Use /models to see available models.`,
-            sender: 'system',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-        }
-        setInputValue('');
-        return;
-      } else if (inputValue === '/models') {
-        const modelsList = Object.entries(availableModels).map(([key, model]) =>
-          `${key}: ${model.name} (${model.provider})`
-        ).join('\n');
-
-        const modelMessage = {
-          id: Date.now(),
-          content: modelsList || 'No models available',
-          sender: 'ai',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, modelMessage]);
-        setInputValue('');
-        return;
-      }
-      // If it's not one of the handled commands, treat as regular message
-    }
-
-    const userMessage = {
+    // Trigger regeneration by sending the same prompt
+    // This will be handled by InputField's sendMessage function
+    // For now, we'll just show a system message
+    const systemMsg = {
       id: Date.now(),
-      content: inputValue,
-      sender: 'user',
+      text: 'Regenerating response...',
+      sender: 'system',
       timestamp: new Date()
     };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: inputValue }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      const aiMessage = {
-        id: Date.now() + 1,
-        content: data.response,
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      const errorMessage = {
-        id: Date.now() + 1,
-        content: `Sorry, I encountered an error: ${error.message}`,
-        sender: 'system',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+    setMessages([...updatedMessages, systemMsg]);
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    sendMessage();
-  };
-
-  const runCommand = (cmd) => {
-    setInputValue(cmd);
+  const handleEditMessage = (message) => {
+    // Set the message text in the input field for editing
+    setInputValue(message.text);
+    // Focus the input field to make it clear that it's in edit mode
     setTimeout(() => {
-      document.getElementById('message-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      const inputField = document.querySelector('.input-field');
+      if (inputField) {
+        inputField.focus();
+        // Move cursor to the end of the text
+        inputField.selectionStart = inputField.value.length;
+        inputField.selectionEnd = inputField.value.length;
+      }
     }, 100);
   };
 
-  const quickActions = [
-    { title: "Explain Code", prompt: "Can you explain how this code works?", icon: "🧩" },
-    { title: "Fix Error", prompt: "I'm getting this error, how do I fix it?", icon: "🔧" },
-    { title: "Optimize Code", prompt: "How can I optimize this code?", icon: "💨" },
-    { title: "Write Unit Test", prompt: "Write a unit test for this function", icon: "🧪" },
-  ];
+  const handleModelChange = (modelId) => {
+    setCurrentModel(modelId);
+    toast.success(`Model changed to: ${modelId}`);
+  };
 
-  const tourSteps = [
-    { id: 1, title: "Welcome to Codeius!", content: "This is your AI-powered coding assistant. You can ask questions about code, get debugging help, and more!" },
-    { id: 2, title: "Try Quick Actions", content: "Use these buttons for common tasks like explaining code, fixing errors, or optimizing code." },
-    { id: 3, title: "Use Commands", content: "Type /help to see all available commands. You can switch models, search code, and perform many tasks." },
-    { id: 4, title: "Customize Your Experience", content: "Click the gear icon to access settings. You can change themes and adjust preferences." },
-  ];
+  const handleDeleteMessageConfirm = () => {
+    if (messageToDelete) {
+      setMessages(messages.filter(msg => msg.id !== messageToDelete));
+      toast.success('Message deleted successfully!');
+      setShowConfirmDialog(false);
+      setMessageToDelete(null);
+    }
+  };
 
-  // Define available commands for the sidebar
-  const commands = [
-    { name: '/help', description: 'Show available commands' },
-    { name: '/models', description: 'List AI models' },
-    { name: '/switch [key]', description: 'Switch AI model' },
-    { name: '/context', description: 'Show project context' },
-    { name: '/set_project [path]', description: 'Set project context' },
-    { name: '/search [query]', description: 'Search codebase' },
-    { name: '/security_scan', description: 'Run security scan' },
-    { name: '/plugins', description: 'List plugins' },
-    { name: '/analyze', description: 'Analyze project' },
-    { name: '/dashboard', description: 'Show dashboard' },
-    { name: '/themes', description: 'Show themes' },
-    { name: '/settings', description: 'Open settings panel' },
-    { name: '/history', description: 'Show conversation history' },
-    { name: '/editor', description: 'Open code editor' },
-    { name: '/test', description: 'Run tests' },
-    { name: '/clear', description: 'Clear chat' },
-  ];
+  const handleDeleteMessage = (messageId) => {
+    setMessageToDelete(messageId);
+    setShowConfirmDialog(true);
+  };
 
-  // Settings panel component
-  const SettingsPanel = () => (
-    <div className="settings-panel" onClick={() => setShowSettings(false)}>
-      <div className="settings-content" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-header">
-          <h3>⚙️ Settings</h3>
-          <button className="close-settings" onClick={() => setShowSettings(false)}>✕</button>
-        </div>
+  const loadHistoryConversation = (conversation) => {
+    if (conversation && conversation.messages) {
+      setMessages(conversation.messages);
+      setShowHistory(false);
+      toast.success('Conversation loaded!');
+    }
+  };
 
-        <div className="settings-section">
-          <h4>Appearance</h4>
-          <div className="setting-item">
-            <label>Theme</label>
-            <div className="custom-select-container">
-              <div
-                className="custom-select-trigger"
-                onClick={() => {
-                  // Toggle the dropdown for theme
-                  const themeDropdown = document.getElementById('theme-dropdown');
-                  themeDropdown.style.display = themeDropdown.style.display === 'block' ? 'none' : 'block';
-                }}
-              >
-                {theme.charAt(0).toUpperCase() + theme.slice(1)}
-                <span className="arrow-down">▼</span>
-              </div>
-              <div id="theme-dropdown" className="custom-options" style={{ display: 'none' }}>
-                {['default', 'light', 'blue', 'green'].map(option => (
-                  <div
-                    key={option}
-                    className="custom-option"
-                    onClick={() => {
-                      switchTheme(option);
-                      document.getElementById('theme-dropdown').style.display = 'none';
-                    }}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+  const handleSearchResultSelect = (message) => {
+    // Scroll to the message or highlight it
+    const messageElement = document.getElementById(`message-${message.id}`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.classList.add('highlight');
+      setTimeout(() => messageElement.classList.remove('highlight'), 2000);
+    }
+  };
 
-          <div className="setting-item">
-            <label>Font Size</label>
-            <div className="custom-select-container">
-              <div
-                className="custom-select-trigger"
-                onClick={() => {
-                  const fontSizeDropdown = document.getElementById('font-size-dropdown');
-                  fontSizeDropdown.style.display = fontSizeDropdown.style.display === 'block' ? 'none' : 'block';
-                }}
-              >
-                {userPreferences.fontSize.charAt(0).toUpperCase() + userPreferences.fontSize.slice(1)}
-                <span className="arrow-down">▼</span>
-              </div>
-              <div id="font-size-dropdown" className="custom-options" style={{ display: 'none' }}>
-                {['small', 'medium', 'large'].map(option => (
-                  <div
-                    key={option}
-                    className="custom-option"
-                    onClick={() => {
-                      updatePreferences({ fontSize: option });
-                      document.getElementById('font-size-dropdown').style.display = 'none';
-                    }}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+  // Always auto-scroll to latest message
+  const shouldAutoScroll = useRef(true);
 
-        <div className="settings-section">
-          <h4>Behavior</h4>
-          <div className="setting-item checkbox-item">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={userPreferences.notifications}
-                onChange={(e) => updatePreferences({ notifications: e.target.checked })}
-              />
-              <span className="checkbox-custom"></span>
-              Enable Notifications
-            </label>
-          </div>
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (container && messages.length > 0) {
+      const isNearBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 100;
 
-          <div className="setting-item checkbox-item">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={userPreferences.autoScroll}
-                onChange={(e) => updatePreferences({ autoScroll: e.target.checked })}
-              />
-              <span className="checkbox-custom"></span>
-              Auto Scroll to Bottom
-            </label>
-          </div>
-        </div>
+      if (isNearBottom || shouldAutoScroll.current) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [messages]);
 
-        <div className="settings-section">
-          <h4>Code Display</h4>
-          <div className="setting-item">
-            <label>Code Highlighting</label>
-            <div className="custom-select-container">
-              <div
-                className="custom-select-trigger"
-                onClick={() => {
-                  const codeHighlightDropdown = document.getElementById('code-highlight-dropdown');
-                  codeHighlightDropdown.style.display = codeHighlightDropdown.style.display === 'block' ? 'none' : 'block';
-                }}
-              >
-                {userPreferences.codeHighlighting.charAt(0).toUpperCase() + userPreferences.codeHighlighting.slice(1)}
-                <span className="arrow-down">▼</span>
-              </div>
-              <div id="code-highlight-dropdown" className="custom-options" style={{ display: 'none' }}>
-                {['auto', 'light', 'dark'].map(option => (
-                  <div
-                    key={option}
-                    className="custom-option"
-                    onClick={() => {
-                      updatePreferences({ codeHighlighting: option });
-                      document.getElementById('code-highlight-dropdown').style.display = 'none';
-                    }}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+  // Track user scroll position to pause auto-scroll
+  useEffect(() => {
+    const container = chatContainerRef.current;
 
-        <div className="settings-actions">
-          <button
-            className="settings-btn reset-btn"
-            onClick={() => {
-              // Reset to default preferences
-              const defaultPrefs = {
-                fontSize: 'medium',
-                codeHighlighting: 'auto',
-                notifications: true,
-                autoScroll: true,
-                sidebarPosition: 'left'
-              };
-              saveUserPreferences(defaultPrefs);
-              setTheme('default');
-              localStorage.setItem('codeius-theme', 'default');
-            }}
-          >
-            Reset to Defaults
-          </button>
-          <button
-            className="settings-btn close-btn"
-            onClick={() => setShowSettings(false)}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    const handleScroll = () => {
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 100;
+        shouldAutoScroll.current = isNearBottom;
+      }
+    };
 
-  // Code Editor Modal
-  const CodeEditorModal = () => (
-    <div className="code-editor-modal" onClick={() => setShowCodeEditor(false)}>
-      <div className="code-editor-content" onClick={(e) => e.stopPropagation()}>
-        <div className="code-editor-header">
-          <h3>Code Editor</h3>
-          <button className="close-editor" onClick={() => setShowCodeEditor(false)}>✕</button>
-        </div>
-        <textarea
-          className="code-editor-textarea"
-          value={codeEditorContent}
-          onChange={(e) => setCodeEditorContent(e.target.value)}
-          placeholder="// Write your code here..."
-        />
-        <div className="code-editor-actions">
-          <button onClick={() => insertCode(codeEditorContent)}>Insert Code</button>
-          <button onClick={() => setCodeEditorContent('')}>Clear</button>
-        </div>
-      </div>
-    </div>
-  );
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
 
-  // History Panel
-  const HistoryPanel = () => (
-    <div className="history-panel" onClick={() => setShowHistory(false)}>
-      <div className="history-content" onClick={(e) => e.stopPropagation()}>
-        <div className="history-header">
-          <h3>📜 Conversation History</h3>
-          <button className="close-history" onClick={() => setShowHistory(false)}>✕</button>
-        </div>
+  // WebSocket streaming setup
+  useEffect(() => {
+    socketService.connect();
 
-        <div className="history-filters">
-          <input
-            type="text"
-            placeholder="Search conversations..."
-            className="history-search"
-          />
-          <div className="custom-select-container">
-            <div
-              className="custom-select-trigger"
-              onClick={() => {
-                const historyFilterDropdown = document.getElementById('history-filter-dropdown');
-                historyFilterDropdown.style.display = historyFilterDropdown.style.display === 'block' ? 'none' : 'block';
-              }}
-            >
-              All Conversations
-              <span className="arrow-down">▼</span>
-            </div>
-            <div id="history-filter-dropdown" className="custom-options" style={{ display: 'none' }}>
-              {['All Conversations', 'Today', 'Past 7 days', 'Past 30 days'].map(option => (
-                <div
-                  key={option}
-                  className="custom-option"
-                  onClick={() => {
-                    // Filter functionality would go here
-                    document.getElementById('history-filter-dropdown').style.display = 'none';
-                  }}
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+    socketService.on('stream_start', (data) => {
+      if (data.session_id === sessionId.current) {
+        setIsStreaming(true);
+        setStreamingMessage({
+          id: Date.now(),
+          text: '',
+          sender: 'ai',
+          timestamp: new Date(),
+          isStreaming: true
+        });
+      }
+    });
 
-        <div className="history-list">
-          {messages.length > 0 ? (
-            messages.map((message, index) => (
-              <div key={message.id} className="history-item">
-                <div className="history-message-preview">
-                  <div className="history-sender">
-                    {message.sender === 'user' ? '👤 You' : message.sender === 'ai' ? '🤖 AI' : '📢 System'}
-                  </div>
-                  <div className="history-content">
-                    {message.content.length > 100
-                      ? message.content.substring(0, 100) + '...'
-                      : message.content}
-                  </div>
-                  <div className="history-time">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              </div>
-            )).reverse() // Show latest conversations first
-          ) : (
-            <div className="no-history">
-              <div className="empty-state-icon">💬</div>
-              <h4>No Conversation History</h4>
-              <p>Start a conversation to see it appear here</p>
-            </div>
-          )}
-        </div>
+    socketService.on('stream_token', (data) => {
+      if (data.session_id === sessionId.current) {
+        setStreamingMessage(prev => prev ? {
+          ...prev,
+          text: prev.text + data.token
+        } : null);
+      }
+    });
 
-        <div className="history-actions">
-          <button
-            className="history-btn clear-btn"
-            onClick={() => {
-              if (window.confirm('Are you sure you want to clear all conversation history?')) {
-                setMessages([]);
-              }
-            }}
-          >
-            Clear History
-          </button>
-          <button
-            className="history-btn close-btn"
-            onClick={() => setShowHistory(false)}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    socketService.on('stream_end', (data) => {
+      if (data.session_id === sessionId.current) {
+        setIsStreaming(false);
+        if (streamingMessage) {
+          setMessages(prev => [...prev, {
+            ...streamingMessage,
+            isStreaming: false
+          }]);
+          setStreamingMessage(null);
+        }
+      }
+    });
 
+    socketService.on('stream_error', (data) => {
+      if (data.session_id === sessionId.current) {
+        setIsStreaming(false);
+        toast.error(`Streaming error: ${data.error}`);
+        setStreamingMessage(null);
+      }
+    });
 
-  // Tour Component
-  const Tour = () => (
-    <div className="tour-overlay" onClick={() => setShowTour(false)}>
-      <div className="tour-content" onClick={(e) => e.stopPropagation()}>
-        <div className="tour-step">
-          <h3>{tourSteps[0].title}</h3>
-          <p>{tourSteps[0].content}</p>
-          <div className="tour-navigation">
-            <button onClick={() => setShowTour(false)}>Skip</button>
-            <button onClick={() => setShowTour(false)}>Got it!</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    return () => {
+      socketService.disconnect();
+    };
+  }, [toast]);
+
+  const handleStopStreaming = () => {
+    socketService.emit('cancel_stream', { session_id: sessionId.current });
+    setIsStreaming(false);
+    if (streamingMessage && streamingMessage.text) {
+      setMessages(prev => [...prev, {
+        ...streamingMessage,
+        isStreaming: false
+      }]);
+    }
+    setStreamingMessage(null);
+  };
+
+  // Add keyboard navigation functionality
+  useEffect(() => {
+    const container = chatContainerRef.current;
+
+    const handleKeyDown = (e) => {
+      // Global shortcuts
+      if (e.ctrlKey && e.key === '/') {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+        return;
+      }
+
+      if (e.ctrlKey && e.key === 'l') {
+        e.preventDefault();
+        // Clear messages
+        setMessages([{
+          id: 1,
+          text: "Conversation cleared. How can I help you?",
+          sender: 'system',
+          timestamp: new Date()
+        }]);
+        return;
+      }
+
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        // Focus input field
+        document.querySelector('.input-field')?.focus();
+        return;
+      }
+
+      // Only respond to navigation keys if the input field is not focused
+      if (!document.activeElement.classList.contains('input-field')) {
+        if (e.key === 'ArrowUp' && container) {
+          e.preventDefault();
+          // Scroll up by roughly 100px or to the top if near the top
+          container.scrollTop = Math.max(0, container.scrollTop - 100);
+        } else if (e.key === 'ArrowDown' && container) {
+          e.preventDefault();
+          // Scroll down by roughly 100px or to the bottom if near the bottom
+          const maxScroll = container.scrollHeight - container.clientHeight;
+          container.scrollTop = Math.min(maxScroll, container.scrollTop + 100);
+        } else if (e.key === 'Home' && container) {
+          e.preventDefault();
+          // Scroll to top
+          container.scrollTop = 0;
+        } else if (e.key === 'End' && container) {
+          e.preventDefault();
+          // Scroll to bottom
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
-    <div className="app">
-      {/* Sidebar with commands */}
-      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-title-container">
-            <div className="logo" title="Codeius Logo"></div>
-            <h2>Codeius AI</h2>
-          </div>
-          <button
-            className="menu-btn-small"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? '✕' : '☰'}
-          </button>
-        </div>
-
-        <div className="sidebar-menu">
-          <div className="menu-section">
-            <h3>Quick Actions</h3>
-            <div className="quick-action-item" onClick={() => runCommand("/help")}>
-              <span className="action-icon">❓</span>
-              <span className="action-text">Help & Support</span>
-            </div>
-            <div className="quick-action-item" onClick={() => runCommand("/models")}>
-              <span className="action-icon">🧠</span>
-              <span className="action-text">Models</span>
-            </div>
-            <div className="quick-action-item" onClick={() => runCommand("/clear")}>
-              <span className="action-icon">🗑️</span>
-              <span className="action-text">Clear Chat</span>
-            </div>
-          </div>
-
-          <div className="menu-section">
-            <h3>AI Commands</h3>
-            {commands.map((cmd, index) => (
-              <div
-                key={index}
-                className="command-item"
-                onClick={() => runCommand(cmd.name)}
-                title={cmd.description}
-              >
-                <div className="command-name-container">
-                  <span className="command-name-icon">🤖</span>
-                  <span className="command-name">{cmd.name}</span>
-                </div>
-                <span className="command-desc">{cmd.description}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="menu-section">
-            <h3>Development Tools</h3>
-            <div className="command-item" onClick={() => runCommand("/context")}>
-              <span className="command-name">/context</span>
-              <span className="command-desc">Show project context</span>
-            </div>
-            <div className="command-item" onClick={() => runCommand("/search")}>
-              <span className="command-name">/search [query]</span>
-              <span className="command-desc">Search codebase</span>
-            </div>
-            <div className="command-item" onClick={() => runCommand("/security_scan")}>
-              <span className="command-name">/security_scan</span>
-              <span className="command-desc">Run security check</span>
-            </div>
-            <div className="command-item" onClick={() => runCommand("/analyze")}>
-              <span className="command-name">/analyze</span>
-              <span className="command-desc">Analyze project</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="sidebar-footer">
-          <div className="current-model-info">
-            <span className="model-label">Current Model:</span>
-            <div className="custom-select-container">
-              <div
-                className="custom-select-trigger"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(170, 255, 255, 0.3)',
-                  color: '#fff',
-                  padding: '0.6rem 1rem',
-                  fontSize: '0.9rem',
-                  minHeight: 'auto'
-                }}
-                onClick={() => {
-                  const modelDropdown = document.getElementById('model-select-dropdown');
-                  modelDropdown.style.display = modelDropdown.style.display === 'block' ? 'none' : 'block';
-                }}
-              >
-                {availableModels[currentModel]?.name || 'Select Model'}
-                <span className="arrow-down">▼</span>
-              </div>
-              <div id="model-select-dropdown" className="custom-options" style={{ display: 'none' }}>
-                {Object.entries(availableModels).map(([key, model]) => (
-                  <div
-                    key={key}
-                    className="custom-option"
-                    onClick={() => {
-                      runCommand(`/switch ${key}`);
-                      document.getElementById('model-select-dropdown').style.display = 'none';
-                    }}
-                  >
-                    {model.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="sidebar-status">
-            <div className="status-indicator online"></div>
-            <span>Connected</span>
-          </div>
-        </div>
+    <div className="app-container">
+      <Navbar
+        onOpenHistory={() => setShowHistory(true)}
+        onModelChange={handleModelChange}
+        currentModel={currentModel}
+        user={user}
+        messages={messages}
+      />
+      <Sidebar />
+      <div className="git-controls-container">
+        <GitControls />
       </div>
+      {/* Chat bubbles appear on the background */}
+      <ErrorBoundary>
+        <div className="chat-container" ref={chatContainerRef}>
+          {/* Settings Modal */}
+          <Suspense fallback={<LoadingSpinner size="medium" />}>
+            {showSettings && (
+              <Settings
+                onClose={() => setShowSettings(false)}
+                onModelChange={handleModelChange}
+                currentModel={currentModel}
+              />
+            )}
+          </Suspense>
 
-      {/* Main chat content */}
-      <div className="chat-container">
-        <header className="chat-header">
-          <div className="navbar-container">
-            {/* Left Side - Sidebar Toggle Button */}
-            <div className="nav-item nav-left">
-              <button
-                className="menu-btn"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label="Toggle sidebar"
-              >
-                ☰
-              </button>
-            </div>
+          {/* History Modal */}
+          <Suspense fallback={<LoadingSpinner size="medium" />}>
+            {showHistory && (
+              <HistoryModal
+                isOpen={showHistory}
+                onClose={() => setShowHistory(false)}
+                onSelectConversation={loadHistoryConversation}
+              />
+            )}
+          </Suspense>
 
-            {/* Center - Logo */}
-            <div className="nav-item nav-center">
-              <img src="/Logo.png" alt="Codeius Logo" className="logo-large" title="Codeius Logo" />
-            </div>
+          {/* Search Modal */}
+          <SearchModal
+            isOpen={showSearch}
+            onClose={() => setShowSearch(false)}
+            messages={messages}
+            onSelectMessage={handleSearchResultSelect}
+          />
 
-            {/* Right Side - Settings and History Buttons */}
-            <div className="nav-item nav-right">
-              <div className="header-actions">
-                <button
-                  className="history-btn"
-                  onClick={() => setShowHistory(true)}
-                  title="History"
-                  aria-label="History"
-                >
-                  📜
-                </button>
-                <button
-                  className="settings-btn"
-                  onClick={() => setShowSettings(true)}
-                  title="Settings"
-                  aria-label="Settings"
-                >
-                  ⚙️
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="quick-actions">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="quick-action-btn"
-              onClick={() => setInputValue(action.prompt)}
-            >
-              <span className="quick-action-icon">{action.icon}</span>
-              <span>{action.title}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="messages-container">
-          <div className="background-logo" />
           {messages.map((message) => (
-            <div key={message.id} className={`message ${message.sender}`}>
-              <div className="message-content">
-                <div className="message-text">
-                  {message.content.split('\n').map((line, i) => (
-                    <div key={i}>{line}</div>
-                  ))}
-                </div>
-                <div className="message-timestamp">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
+            <ChatBubble
+              key={message.id}
+              text={message.text}
+              sender={message.sender}
+              timestamp={message.timestamp}
+              isLoading={message.isLoading}
+              message={message}
+              onCopy={handleCopyMessage}
+              onRegenerate={handleRegenerateMessage}
+              onDelete={handleDeleteMessage}
+              onEdit={handleEditMessage}
+            />
           ))}
-          {isLoading && (
-            <div className="message ai">
-              <div className="message-content">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
+          {streamingMessage && (
+            <ChatBubble
+              key="streaming"
+              text={streamingMessage.text}
+              sender={streamingMessage.sender}
+              timestamp={streamingMessage.timestamp}
+              message={streamingMessage}
+            />
           )}
           <div ref={messagesEndRef} />
         </div>
-
-        <form id="message-form" onSubmit={handleFormSubmit} className="input-form">
-          <div className="input-container">
-            <div className="input-wrapper">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask Codeius anything about coding..."
-                className="message-input"
-                disabled={isLoading}
-                autoFocus
-              />
-              <button
-                type="submit"
-                className="send-button"
-                disabled={!inputValue.trim() || isLoading}
-              >
-                {isLoading ? 'Sending...' : '➤'}
-              </button>
-            </div>
-            <div className="input-hint">
-              <span>Tip: Use /commands to see available commands</span>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      {/* Settings Panel */}
-      {showSettings && <SettingsPanel />}
-
-      {/* Code Editor Modal */}
-      {showCodeEditor && <CodeEditorModal />}
-
-      {/* History Panel */}
-      {showHistory && <HistoryPanel />}
-
-      {/* Tour Modal */}
-      {showTour && <Tour />}
-
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      </ErrorBoundary>
+      <StopButton isStreaming={isStreaming} onStop={handleStopStreaming} />
+      {/* The background image remains visible as the background of the App div */}
+      <InputField
+        ref={inputFieldRef}
+        setMessages={setMessages}
+        messages={messages}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+      />
+      {/* History modal */}
+      <ErrorBoundary>
+        <HistoryModal isOpen={isHistoryModalOpen} onClose={closeHistoryModal} />
+      </ErrorBoundary>
+      {/* Keyboard shortcuts overlay */}
+      <KeyboardShortcuts isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      {/* Confirmation dialog for delete actions */}
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleDeleteMessageConfirm}
+        title="Delete Message"
+        message="Are you sure you want to delete this message? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
+  )
+}
+
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SharedSessionView from './components/SharedSessionView/SharedSessionView';
+
+// ... (AppContent function remains the same)
+
+function App() {
+  return (
+    <ToastProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<AppContent />} />
+          <Route path="/share/:sessionId" element={<SharedSessionView />} />
+        </Routes>
+      </Router>
+    </ToastProvider>
   );
 }
 

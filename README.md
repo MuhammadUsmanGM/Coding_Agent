@@ -38,7 +38,7 @@ Codeius is an advanced AI-powered coding assistant that helps with various progr
 ## Features
 
 - **File Operations**: Read and write source files in your workspace with advanced security validation
-- **Git Operations**: Stage and commit files
+- **Git Operations**: Full Git version control including staging, committing, pushing, pulling, cloning, branch management, status checking, and log viewing
 - **Web Search**: Perform real-time web searches via DuckDuckGo MCP server (no API key required)
 - **Multiple LLM Providers**: Uses both Groq and Google AI models with automatic failover
 - **Model Switching**: Switch between available models using `/models` and `/switch` commands
@@ -70,6 +70,7 @@ Codeius is an advanced AI-powered coding assistant that helps with various progr
 - **Performance Optimizations**: Caching, rate limiting, and efficient resource usage
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 - **Type Safety**: Full type hinting throughout the codebase for better reliability
+- **Web-Based GUI**: Modern React interface with rich visual components, file upload capabilities, real-time chat interface, code editor with syntax highlighting, dashboard for analytics, settings panel, command palette, project explorer, and Git controls
 
 ## Installation
 
@@ -83,8 +84,14 @@ pip install codeius
 
 Then run:
 
+### CLI Version:
 ```bash
 codeius
+```
+
+### Web GUI Version:
+```bash
+codeius web
 ```
 
 ### Option 2: Using uvx (Zero-Install)
@@ -289,6 +296,18 @@ The agent follows a modular, service-oriented architecture:
   - `testing_server.py` - Automated testing
   - `doc_search_server.py` - Documentation search
   - `db_server.py` - Database queries
+  - `ocr_server.py` - OCR for image text extraction
+  - `refactor_server.py` - Code analysis and refactoring
+  - `diff_server.py` - File and directory comparison
+  - `automation_server.py` - Project scaffolding and automation
+  - `viz_server.py` - Data visualization and plotting
+  - `self_doc_server.py` - Auto-update documentation
+  - `package_inspector_server.py` - Package information and vulnerabilities
+  - `snippet_manager_server.py` - Code snippets and templates
+  - `web_scraper_server.py` - Static HTML and web scraping
+  - `config_manager_server.py` - Configuration and credential management
+  - `task_scheduler_server.py` - Local task scheduling
+  - `git_server.py` - Git version control operations
 
 ## Security Features
 
